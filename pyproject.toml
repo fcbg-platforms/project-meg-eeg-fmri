@@ -24,10 +24,10 @@ dependencies = [
 ]
 description = 'Comparison of localisation in fMRI/MEG/EEG.'
 keywords = [
-  'python',
-  'meg',
   'eeg',
   'fMRI',
+  'meg',
+  'python',
 ]
 license = {file = 'LICENSE'}
 maintainers = [
