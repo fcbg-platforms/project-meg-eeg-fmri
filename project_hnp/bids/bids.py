@@ -98,6 +98,9 @@ def _write_meg_calibration_crosstalk(bids_path) -> None:
         A :class:`~mne_bids.BIDSPath` with at least root amd subject set, and with
         datatype set to 'meg'.
     """
+    assert bids_path.root is not None
+    assert bids_path.subject is not None
+    assert bids_path.datatype == "meg"
     fname = files("project_hnp.bids") / "assets" / "calibration" / "sss_cal.dat"
     write_meg_calibration(fname, bids_path)
     fname = files("project_hnp.bids") / "assets" / "crosstalk" / "ct_sparse.fif"
