@@ -1,0 +1,152 @@
+[build-system]
+build-backend = 'setuptools.build_meta'
+requires = ['setuptools >= 64.0.0']
+
+[project]
+authors = [
+  {email = 'mathieu.scheltienne@fcbg.ch', name = 'Mathieu Scheltienne'},
+]
+classifiers = [
+  'License :: OSI Approved :: MIT License',
+  'Natural Language :: English',
+  'Operating System :: MacOS',
+  'Operating System :: Microsoft :: Windows',
+  'Operating System :: Unix',
+  'Programming Language :: Python :: 3 :: Only',
+  'Programming Language :: Python :: 3.10',
+  'Programming Language :: Python :: 3.11',
+  'Programming Language :: Python :: 3.12',
+]
+dependencies = [
+  'numpy>=1.21',
+  'packaging',
+  'psutil',
+]
+description = 'Comparison of localisation in fMRI/MEG/EEG.'
+keywords = [
+  'python',
+  'meg',
+  'eeg',
+  'fMRI',
+]
+license = {file = 'LICENSE'}
+maintainers = [
+  {email = 'mathieu.scheltienne@fcbg.ch', name = 'Mathieu Scheltienne'},
+]
+name = 'project_hnp'
+readme = 'README.md'
+requires-python = '>=3.10'
+version = '0.1.0'
+
+[project.optional-dependencies]
+all = [
+  'project_hnp[build]',
+  'project_hnp[doc]',
+  'project_hnp[stubs]',
+  'project_hnp[style]',
+  'project_hnp[test]',
+]
+build = [
+  'build',
+  'twine',
+]
+full = [
+  'project_hnp[all]',
+]
+style = [
+  'bibclean',
+  'codespell[toml]>=2.2.4',
+  'isort',
+  'pydocstyle[toml]',
+  'ruff>=0.1.8',
+  'toml-sort',
+  'yamllint',
+]
+test = [
+  'pytest-cov',
+  'pytest-timeout',
+  'pytest>=8.0',
+]
+
+[project.scripts]
+project_hnp-sys_info = 'project_hnp.commands.sys_info:run'
+
+[project.urls]
+homepage = 'https://github.com/fcbg-hnp-meeg/project-meg-eeg-fmri'
+source = 'https://github.com/fcbg-hnp-meeg/project-meg-eeg-fmri'
+tracker = 'https://github.com/fcbg-hnp-meeg/project-meg-eeg-fmri/issues'
+
+[tool.codespell]
+check-filenames = true
+check-hidden = true
+ignore-words = '.codespellignore'
+skip = 'build,.git,.mypy_cache,.pytest_cache'
+
+[tool.coverage.report]
+exclude_lines = [
+  'if __name__ == .__main__.:',
+  'if TYPE_CHECKING:',
+  'pragma: no cover',
+]
+precision = 2
+
+[tool.coverage.run]
+branch = true
+cover_pylib = false
+omit = [
+  '**/__init__.py',
+  '**/conftest.py',
+  '**/project_hnp/_version.py',
+  '**/project_hnp/commands/*',
+  '**/project_hnp/utils/_fixes.py',
+  '**/tests/**',
+]
+
+[tool.isort]
+extend_skip_glob = []
+line_length = 88
+multi_line_output = 3
+profile = 'black'
+py_version = 310
+
+[tool.pydocstyle]
+add_ignore = 'D100,D104,D107'
+convention = 'numpy'
+ignore-decorators = '(copy_doc|property|.*setter|.*getter|pyqtSlot|Slot)'
+match = '^(?!__init__|test_).*\.py'
+match-dir = '^project_hnp.*'
+
+[tool.pytest.ini_options]
+addopts = '--durations 20 --junit-xml=junit-results.xml --verbose'
+minversion = '8.0'
+
+[tool.ruff]
+extend-exclude = []
+line-length = 88
+target-version = 'py310'
+
+[tool.ruff.format]
+docstring-code-format = true
+line-ending = "lf"
+
+[tool.ruff.lint]
+ignore = []
+select = ['A', 'B', 'E', 'F', 'UP', 'W']
+
+[tool.ruff.lint.per-file-ignores]
+'*' = [
+  'B904', # 'Within an except clause, raise exceptions with raise ... from ...'
+]
+'__init__.py' = ['F401']
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+exclude = ['project_hnp*tests']
+include = ['project_hnp*']
+
+[tool.tomlsort]
+all = true
+ignore_case = true
+trailing_comma_inline_array = true
