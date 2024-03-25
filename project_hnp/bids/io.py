@@ -114,8 +114,12 @@ def _write_meg_calibration_crosstalk(bids_path, *, overwrite: bool = False) -> N
     assert bids_path.subject is not None
     assert bids_path.datatype == "meg"
     fname = files("project_hnp.bids") / "assets" / "calibration" / "sss_cal.dat"
+    if fname.exists() and not overwrite:
+        raise FileExistsError(f"Calibration file '{fname}' already exists.")
     write_meg_calibration(fname, bids_path)
     fname = files("project_hnp.bids") / "assets" / "crosstalk" / "ct_sparse.fif"
+    if fname.exists() and not overwrite:
+        raise FileExistsError(f"Crosstalk file '{fname}' already exists.")
     write_meg_crosstalk(fname, bids_path)
 
 
