@@ -14,12 +14,14 @@ from mne_bids import (
 )
 
 from ..utils._checks import ensure_int, ensure_path
+from ..utils._docs import fill_doc
 from ._constants import EXPECTED_EEG, EXPECTED_MEG, EXPECTED_MRI, OPTIONAL_MEG
 
 if TYPE_CHECKING:
     from pathlib import Path
 
 
+@fill_doc
 def bidsification(
     root: Path | str,
     subject: int,
@@ -29,7 +31,22 @@ def bidsification(
     *,
     overwrite: bool = False,
 ):
-    """Convert a dataset to BIDS."""
+    """Convert a dataset to BIDS.
+
+    Parameters
+    ----------
+    root : Path | str
+        Path to the root of the BIDS dataset.
+    subject : int
+        Subject number.
+    data_eeg : Path | str
+        Path to the EEG dataset.
+    data_meg : Path | str
+        Path to the MEG dataset.
+    data_mri : Path | str
+        Path to the MRI dataset.
+    %(overwrite)s
+    """
     root = ensure_path(root, must_exist=True)
     subject = ensure_int(subject, "subject")
     if subject <= 0:
@@ -46,6 +63,7 @@ def bidsification(
     _write_mri_datasets(bids_path, data_mri, overwrite=overwrite)
 
 
+@fill_doc
 def _write_meg_datasets(
     bids_path: BIDSPath, data_meg: Path, *, overwrite: bool = False
 ) -> None:
@@ -53,10 +71,10 @@ def _write_meg_datasets(
 
     Parameters
     ----------
-    bids_path : BIDSPath
-        A :class:`~mne_bids.BIDSPath` with at least root and subject set.
+    %(bids_path_root_sub)s
     data_meg : Path
         Path to the MEG dataset.
+    %(overwrite)s
     """
     assert bids_path.root is not None
     assert bids_path.subject is not None
@@ -101,6 +119,7 @@ def _write_meg_datasets(
         )
 
 
+@fill_doc
 def _write_meg_calibration_crosstalk(bids_path, *, overwrite: bool = False) -> None:
     """Write MEG calibration and crosstalk files.
 
@@ -109,6 +128,7 @@ def _write_meg_calibration_crosstalk(bids_path, *, overwrite: bool = False) -> N
     bids_path : BIDSPath
         A :class:`~mne_bids.BIDSPath` with at least root amd subject set, and with
         datatype set to 'meg'.
+    %(overwrite)s
     """
     assert bids_path.root is not None
     assert bids_path.subject is not None
@@ -123,6 +143,7 @@ def _write_meg_calibration_crosstalk(bids_path, *, overwrite: bool = False) -> N
     write_meg_crosstalk(fname, bids_path)
 
 
+@fill_doc
 def _write_eeg_datasets(
     bids_path: BIDSPath, data_eeg: Path, *, overwrite: bool = False
 ) -> None:
@@ -130,10 +151,10 @@ def _write_eeg_datasets(
 
     Parameters
     ----------
-    bids_path : BIDSPath
-        A :class:`~mne_bids.BIDSPath` with at least root and subject set.
+    %(bids_path_root_sub)s
     data_eeg : Path
         Path to the EEG dataset.
+    %(overwrite)s
     """
     assert bids_path.root is not None
     assert bids_path.subject is not None
@@ -177,6 +198,7 @@ def _write_eeg_datasets(
         )
 
 
+@fill_doc
 def _write_mri_datasets(
     bids_path: BIDSPath, data_mri: Path, *, overwrite: bool = False
 ) -> None:
@@ -184,10 +206,10 @@ def _write_mri_datasets(
 
     Parameters
     ----------
-    bids_path : BIDSPath
-        A :class:`~mne_bids.BIDSPath` with at least root and subject set.
+    %(bids_path_root_sub)s
     data_mri : Path
         Path to the MRI dataset.
+    %(overwrite)s
     """
     assert bids_path.root is not None
     assert bids_path.subject is not None
