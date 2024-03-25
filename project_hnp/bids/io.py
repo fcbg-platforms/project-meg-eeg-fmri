@@ -4,7 +4,7 @@ from importlib.resources import files
 from typing import TYPE_CHECKING
 from warnings import warn
 
-from mne.io import read_raw_fif
+from mne.io import read_raw_egi, read_raw_fif
 from mne_bids import (
     BIDSPath,
     write_meg_calibration,
@@ -13,7 +13,7 @@ from mne_bids import (
 )
 
 from ..utils._checks import ensure_int, ensure_path
-from ._constants import EXPECTED_MEG, OPTIONAL_MEG
+from ._constants import EXPECTED_EEG, EXPECTED_MEG, OPTIONAL_MEG
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -39,6 +39,7 @@ def bidsification(
 
     bids_path = BIDSPath(root=root, subject=subject)
     _write_meg_datasets(bids_path, data_meg)
+    _write_eeg_datasets(bids_path, data_eeg)
 
 
 def _write_meg_datasets(bids_path: BIDSPath, data_meg: Path) -> None:
@@ -48,6 +49,8 @@ def _write_meg_datasets(bids_path: BIDSPath, data_meg: Path) -> None:
     ----------
     bids_path : BIDSPath
         A :class:`~mne_bids.BIDSPath` with at least root amd subject set.
+    data_meg : Path
+        Path to the MEG dataset.
     """
     empty_room = None
     for file in data_meg.glob("*.fif"):
@@ -83,8 +86,8 @@ def _write_meg_datasets(bids_path: BIDSPath, data_meg: Path) -> None:
         write_raw_bids(
             raw,
             bids_path,
-            events=None,
-            event_id=None,
+            events=None,  # TODO: extract and add events
+            event_id=None,  # TODO: validate event IDs based on constants
             empty_room=empty_room,
         )
 
@@ -105,3 +108,52 @@ def _write_meg_calibration_crosstalk(bids_path) -> None:
     write_meg_calibration(fname, bids_path)
     fname = files("project_hnp.bids") / "assets" / "crosstalk" / "ct_sparse.fif"
     write_meg_crosstalk(fname, bids_path)
+
+
+def _write_eeg_datasets(bids_path: BIDSPath, data_eeg: Path) -> None:
+    """Write EEG datasets.
+
+    Parameters
+    ----------
+    bids_path : BIDSPath
+        A :class:`~mne_bids.BIDSPath` with at least root amd subject set.
+    data_eeg : Path
+        Path to the EEG dataset.
+    """
+    for file in data_eeg.glob("*.mff"):
+        finfo = file.stem.split("_")
+        assert finfo[0].startswith("sub")  # sanity-check
+        try:
+            subject = int(finfo[0].split("-")[1])
+        except Exception:
+            raise ValueError(
+                f"The subject ID could not be parsed from the filename '{file.name}'."
+            )
+        if bids_path.subject != subject:
+            raise ValueError(
+                f"The subject number in the filename ({subject}) does not match "
+                "the subject number requested in the BIDS path ({bids_path.subject})."
+            )
+        assert finfo[2].startswith("task")  # sanity-check
+        try:
+            task = finfo[2].split("-")[1]
+        except Exception:
+            raise ValueError(
+                f"The task name could not be parsed from the filename '{file.name}'."
+            )
+        if task not in EXPECTED_EEG:
+            raise ValueError(
+                f"Unexpected task name '{task}' in filename '{file.name}'."
+            )
+    # now that the input is validated, we can update the BIDS dataset
+    bids_path.update(datatype="eeg")
+    for file in data_eeg.glob("*.mff"):
+        finfo = file.stem.split("_")
+        bids_path.update(task=finfo[3].lower())
+        raw = read_raw_egi(file)
+        write_raw_bids(
+            raw,
+            bids_path,
+            events=None,  # TODO: extract and add events
+            event_id=None,  # TODO: validate event IDs based on constants
+        )
