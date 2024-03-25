@@ -57,7 +57,7 @@ def bidsification(
     data_meg = ensure_path(data_meg, must_exist=True)
     data_mri = ensure_path(data_mri, must_exist=True)
 
-    bids_path = BIDSPath(root=root, subject=subject)
+    bids_path = BIDSPath(root=root, subject=str(subject).zfill(2))
     _write_meg_datasets(bids_path, data_meg, overwrite=overwrite)
     _write_eeg_datasets(bids_path, data_eeg, overwrite=overwrite)
     _write_mri_datasets(bids_path, data_mri, overwrite=overwrite)
@@ -82,10 +82,11 @@ def _write_meg_datasets(
     for file in data_meg.glob("*.fif"):
         finfo = file.stem.split("_")
         assert finfo[0] == "sub"  # sanity-check
-        if bids_path.subject != int(finfo[1]):
+        if int(bids_path.subject) != int(finfo[1]):
             raise ValueError(
                 f"The subject number in the filename ({int(finfo[1])}) does not match "
-                "the subject number requested in the BIDS path ({bids_path.subject})."
+                "the subject number requested in the BIDS path "
+                f"({int(bids_path.subject)})."
             )
         assert finfo[2] == "task"  # sanity-check
         if finfo[3].lower() not in EXPECTED_MEG.union(OPTIONAL_MEG):
@@ -107,7 +108,14 @@ def _write_meg_datasets(
     _write_meg_calibration_crosstalk(bids_path, overwrite=overwrite)
     for file in data_meg.glob("*.fif"):
         finfo = file.stem.split("_")
-        bids_path.update(task=finfo[3].lower())
+        task = finfo[3].lower()
+        if task == "noise":
+            continue
+        bids_path.update(task=task)
+        # look for existing files in the case of overwrite=False
+        out_path = bids_path.copy().update(suffix="meg", extension=".fif")
+        if out_path.fpath.exists() and not overwrite:
+            raise FileExistsError(f"MEG file '{out_path.fpath}' already exists.")
         raw = read_raw_fif(file)
         write_raw_bids(
             raw,
@@ -115,7 +123,7 @@ def _write_meg_datasets(
             events=None,  # TODO: extract and add events
             event_id=None,  # TODO: validate event IDs based on constants
             empty_room=empty_room,
-            overwrite=overwrite,
+            overwrite=True,  # need to be True because of common empty-room file
         )
 
 
@@ -133,13 +141,35 @@ def _write_meg_calibration_crosstalk(bids_path, *, overwrite: bool = False) -> N
     assert bids_path.root is not None
     assert bids_path.subject is not None
     assert bids_path.datatype == "meg"
+
     fname = files("project_hnp.bids") / "assets" / "calibration" / "sss_cal.dat"
-    if fname.exists() and not overwrite:
-        raise FileExistsError(f"Calibration file '{fname}' already exists.")
+    assert fname.exists()  # sanity-check
+    out_path = BIDSPath(
+        subject=bids_path.subject,
+        session=bids_path.session,
+        acquisition="calibration",
+        suffix="meg",
+        extension=".dat",
+        datatype="meg",
+        root=bids_path.root,
+    )
+    if out_path.fpath.exists() and not overwrite:
+        raise FileExistsError(f"Calibration file '{out_path}' already exists.")
     write_meg_calibration(fname, bids_path)
-    fname = files("project_hnp.bids") / "assets" / "crosstalk" / "ct_sparse.fif"
-    if fname.exists() and not overwrite:
-        raise FileExistsError(f"Crosstalk file '{fname}' already exists.")
+
+    fname = files("project_hnp.bids") / "assets" / "cross-talk" / "ct_sparse.fif"
+    assert fname.exists()  # sanity-check
+    out_path = BIDSPath(
+        subject=bids_path.subject,
+        session=bids_path.session,
+        acquisition="crosstalk",
+        suffix="meg",
+        extension=".fif",
+        datatype="meg",
+        root=bids_path.root,
+    )
+    if out_path.fpath.exists() and not overwrite:
+        raise FileExistsError(f"Crosstalk file '{out_path}' already exists.")
     write_meg_crosstalk(fname, bids_path)
 
 
@@ -170,7 +200,7 @@ def _write_eeg_datasets(
         if bids_path.subject != subject:
             raise ValueError(
                 f"The subject number in the filename ({subject}) does not match "
-                "the subject number requested in the BIDS path ({bids_path.subject})."
+                f"the subject number requested in the BIDS path ({bids_path.subject})."
             )
         assert finfo[2].startswith("task")  # sanity-check
         try:
@@ -187,7 +217,7 @@ def _write_eeg_datasets(
     bids_path.update(datatype="eeg")
     for file in data_eeg.glob("*.mff"):
         finfo = file.stem.split("_")
-        bids_path.update(task=finfo[3].lower())
+        bids_path.update(task=finfo[2].split("-")[1])
         raw = read_raw_egi(file)
         write_raw_bids(
             raw,
