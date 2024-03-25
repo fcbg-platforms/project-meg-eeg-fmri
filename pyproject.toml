@@ -142,6 +142,9 @@ select = ['A', 'B', 'E', 'F', 'UP', 'W']
 [tool.setuptools]
 include-package-data = false
 
+[tool.setuptools.package-data]
+"projecz_hnp.bids" = ["assets/*"]
+
 [tool.setuptools.packages.find]
 exclude = ['project_hnp*tests']
 include = ['project_hnp*']
