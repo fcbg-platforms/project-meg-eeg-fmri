@@ -7,13 +7,14 @@ from warnings import warn
 from mne.io import read_raw_egi, read_raw_fif
 from mne_bids import (
     BIDSPath,
+    write_anat,
     write_meg_calibration,
     write_meg_crosstalk,
     write_raw_bids,
 )
 
 from ..utils._checks import ensure_int, ensure_path
-from ._constants import EXPECTED_EEG, EXPECTED_MEG, OPTIONAL_MEG
+from ._constants import EXPECTED_EEG, EXPECTED_MEG, EXPECTED_MRI, OPTIONAL_MEG
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -25,6 +26,8 @@ def bidsification(
     data_eeg: Path | str,
     data_meg: Path | str,
     data_mri: Path | str,
+    *,
+    overwrite: bool = False,
 ):
     """Convert a dataset to BIDS."""
     root = ensure_path(root, must_exist=True)
@@ -38,11 +41,14 @@ def bidsification(
     data_mri = ensure_path(data_mri, must_exist=True)
 
     bids_path = BIDSPath(root=root, subject=subject)
-    _write_meg_datasets(bids_path, data_meg)
-    _write_eeg_datasets(bids_path, data_eeg)
+    _write_meg_datasets(bids_path, data_meg, overwrite=overwrite)
+    _write_eeg_datasets(bids_path, data_eeg, overwrite=overwrite)
+    _write_mri_datasets(bids_path, data_mri, overwrite=overwrite)
 
 
-def _write_meg_datasets(bids_path: BIDSPath, data_meg: Path) -> None:
+def _write_meg_datasets(
+    bids_path: BIDSPath, data_meg: Path, *, overwrite: bool = False
+) -> None:
     """Write MEG datasets.
 
     Parameters
@@ -52,6 +58,8 @@ def _write_meg_datasets(bids_path: BIDSPath, data_meg: Path) -> None:
     data_meg : Path
         Path to the MEG dataset.
     """
+    assert bids_path.root is not None
+    assert bids_path.subject is not None
     empty_room = None
     for file in data_meg.glob("*.fif"):
         finfo = file.stem.split("_")
@@ -78,7 +86,7 @@ def _write_meg_datasets(bids_path: BIDSPath, data_meg: Path) -> None:
         empty_room = read_raw_fif(empty_room)
     # now that the input is validated, we can update the BIDS dataset
     bids_path.update(datatype="meg")
-    _write_meg_calibration_crosstalk(bids_path)
+    _write_meg_calibration_crosstalk(bids_path, overwrite=overwrite)
     for file in data_meg.glob("*.fif"):
         finfo = file.stem.split("_")
         bids_path.update(task=finfo[3].lower())
@@ -89,10 +97,11 @@ def _write_meg_datasets(bids_path: BIDSPath, data_meg: Path) -> None:
             events=None,  # TODO: extract and add events
             event_id=None,  # TODO: validate event IDs based on constants
             empty_room=empty_room,
+            overwrite=overwrite,
         )
 
 
-def _write_meg_calibration_crosstalk(bids_path) -> None:
+def _write_meg_calibration_crosstalk(bids_path, *, overwrite: bool = False) -> None:
     """Write MEG calibration and crosstalk files.
 
     Parameters
@@ -110,7 +119,9 @@ def _write_meg_calibration_crosstalk(bids_path) -> None:
     write_meg_crosstalk(fname, bids_path)
 
 
-def _write_eeg_datasets(bids_path: BIDSPath, data_eeg: Path) -> None:
+def _write_eeg_datasets(
+    bids_path: BIDSPath, data_eeg: Path, *, overwrite: bool = False
+) -> None:
     """Write EEG datasets.
 
     Parameters
@@ -120,6 +131,8 @@ def _write_eeg_datasets(bids_path: BIDSPath, data_eeg: Path) -> None:
     data_eeg : Path
         Path to the EEG dataset.
     """
+    assert bids_path.root is not None
+    assert bids_path.subject is not None
     for file in data_eeg.glob("*.mff"):
         finfo = file.stem.split("_")
         assert finfo[0].startswith("sub")  # sanity-check
@@ -156,4 +169,30 @@ def _write_eeg_datasets(bids_path: BIDSPath, data_eeg: Path) -> None:
             bids_path,
             events=None,  # TODO: extract and add events
             event_id=None,  # TODO: validate event IDs based on constants
+            overwrite=overwrite,
         )
+
+
+def _write_mri_datasets(
+    bids_path: BIDSPath, data_mri: Path, *, overwrite: bool = False
+) -> None:
+    """Write EEG datasets.
+
+    Parameters
+    ----------
+    bids_path : BIDSPath
+        A :class:`~mne_bids.BIDSPath` with at least root and subject set.
+    data_mri : Path
+        Path to the MRI dataset.
+    """
+    assert bids_path.root is not None
+    assert bids_path.subject is not None
+    folders = [folder for folder in data_mri.iterdir() if folder.is_dir()]
+    if set(folders) != EXPECTED_MRI:
+        raise ValueError(f"Expected MRI folders {EXPECTED_MRI}, got {set(folders)}.")
+    # find anatomical MRI and write it to BIDS dataset
+    bids_path.update(datatype="anat")
+    for file in data_mri.glob("*.nii"):
+        if "t1" in file.name.lower():
+            write_anat(file, bids_path, overwrite=overwrite)
+            break
