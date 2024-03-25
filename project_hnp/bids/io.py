@@ -48,7 +48,7 @@ def _write_meg_datasets(bids_path: BIDSPath, data_meg: Path) -> None:
     Parameters
     ----------
     bids_path : BIDSPath
-        A :class:`~mne_bids.BIDSPath` with at least root amd subject set.
+        A :class:`~mne_bids.BIDSPath` with at least root and subject set.
     data_meg : Path
         Path to the MEG dataset.
     """
@@ -116,7 +116,7 @@ def _write_eeg_datasets(bids_path: BIDSPath, data_eeg: Path) -> None:
     Parameters
     ----------
     bids_path : BIDSPath
-        A :class:`~mne_bids.BIDSPath` with at least root amd subject set.
+        A :class:`~mne_bids.BIDSPath` with at least root and subject set.
     data_eeg : Path
         Path to the EEG dataset.
     """
