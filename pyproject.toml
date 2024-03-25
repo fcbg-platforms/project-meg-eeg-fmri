@@ -18,9 +18,14 @@ classifiers = [
   'Programming Language :: Python :: 3.12',
 ]
 dependencies = [
+  'defusedxml',
+  'mne',
+  'mne-bids',
+  'nibabel',
   'numpy>=1.21',
   'packaging',
   'psutil',
+  'pybv',
 ]
 description = 'Comparison of localisation in fMRI/MEG/EEG.'
 keywords = [
