@@ -7,19 +7,14 @@ on:  # yamllint disable-line rule:truthy
   push:
     branches: [main]
   workflow_dispatch:
-  schedule:
-    - cron: '0 8 * * 1'
 
 jobs:
   pytest:
-    timeout-minutes: 30
+    timeout-minutes: 10
     strategy:
       fail-fast: false
-      matrix:
-        os: [ubuntu]
-        python-version: ["3.10"]
-    name: ${{ matrix.os }} - py${{ matrix.python-version }}
-    runs-on: ${{ matrix.os }}-latest
+    name: pre-commit
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
@@ -29,21 +24,13 @@ jobs:
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.11"
           architecture: 'x64'
       - name: Install package
         run: |
           python -m pip install --progress-bar off --upgrade pip setuptools
-          python -m pip install --progress-bar off .[test]
+          python -m pip install --progress-bar off .[style]
       - name: Display system information
         run: project_hnp-sys_info --developer
-      - name: Run pytest
-        run: pytest project_hnp --cov=project_hnp --cov-report=xml --cov-config=pyproject.toml
-      - name: Upload to codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./coverage.xml
-          flags: unittests  # optional
-          name: codecov-umbrella  # optional
-          token: ${{ secrets.CODECOV_TOKEN }}
-          verbose: true  # optional (default = false)
+      - name: Run pre-commit hooks
+        uses: pre-commit/action@v3.0.1
