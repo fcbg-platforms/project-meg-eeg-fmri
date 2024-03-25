@@ -221,7 +221,7 @@ def _write_mri_datasets(
     bids_path: BIDSPath,
     data_mri: Path,
 ) -> None:
-    """Write EEG datasets.
+    """Write MRI datasets.
 
     Parameters
     ----------
