@@ -92,6 +92,8 @@ def _write_meg_calibration_crosstalk(bids_path: BIDSPath) -> None:
 def _write_dewar_position(position: str, sidecar_fname: Path):
     """Write the dewar position."""
     assert isinstance(position, str)
+    assert isinstance(sidecar_fname, Path)
+    assert sidecar_fname.exists()
     with open(sidecar_fname, encoding="utf-8-sig") as fin:
         sidecar_json = json.load(fin)
     sidecar_json["DewarPosition"] = position
