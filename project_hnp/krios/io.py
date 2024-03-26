@@ -11,6 +11,7 @@ from pycpd import RigidRegistration
 
 from ..utils._checks import ensure_path
 from ._transform import krios_to_head_coordinate, reorder_electrodes
+from ._utils import remove_duplicates
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -69,6 +70,7 @@ def read_krios(fname: Path | str) -> tuple[NDArray[np.float64], NDArray[np.float
     )
     # extract (x, y, z) coordinates as array of shape (n_scanned, 3)
     elc = df[eeg_idx, :]
+    elc = remove_duplicates(elc)
     fid = df[fid_idx, :]
     del df
     elc, fid, _ = krios_to_head_coordinate(elc, fid)
