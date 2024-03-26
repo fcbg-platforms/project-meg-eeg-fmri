@@ -5,11 +5,13 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
-from mne.channels import make_dig_montage
+from mne.channels import make_dig_montage, make_standard_montage
+from mne.channels.montage import _get_montage_in_head
+from mne.defaults import HEAD_SIZE_DEFAULT as _HEAD_SIZE_DEFAULT
 from pycpd import RigidRegistration
 
 from ..utils._checks import ensure_path
-from ._transform import krios_to_head_coordinate, reorder_electrodes
+from ._transform import fit_matched_points, krios_to_head_coordinate, reorder_electrodes
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -64,8 +66,9 @@ def read_krios(fname: Path | str) -> tuple[NDArray[np.float64], NDArray[np.float
     # - registration parameters : tuple of 3 elements
     #   - s_reg : float, the scale of the registration
     #   - R_reg : array of shape (3, 3), the rotation matrix of the registration
-    #   - t_reg : array of shape (1, 3), the translation vector of the registration
-    elc_TY, _ = RigidRegistration(X=elc_template, Y=elc).register()  # TODO: check
+    #   - t_reg : array of shape (3,), the translation vector of the registration
+    elc_TY, (s_reg, _, _) = RigidRegistration(X=elc_template, Y=elc).register()
+    fid *= s_reg  # apply the same scaling to fiducials
     # reorder electrodes according to template
     elc_reordered = reorder_electrodes(elc_TY, elc_template)
     return elc_reordered, fid
@@ -85,6 +88,17 @@ def read_krios_montage(fname: Path | str) -> DigMontage:
         MNE channel montage for the EEG electrodes in the head coordinate frame.
     """
     elc, fid = read_krios(fname)
+    # apply scaling to meters
+    standard = make_standard_montage("standard_1020", head_size=_HEAD_SIZE_DEFAULT)
+    standard = _get_montage_in_head(standard).get_positions()
+    assert standard["coord_frame"] == "head"  # sanity-check
+    fid_standard = np.array(
+        [standard["rpa"], standard["lpa"], standard["nasion"]], dtype=np.float64
+    )
+    _, scaling = fit_matched_points(fid, fid_standard, scale=True)
+    elc *= scaling
+    fid *= scaling
+    # figure out labels from template
     df_template = pd.read_csv(_TEMPLATE_FNAME, sep=" ", header=0, skipinitialspace=True)
     ch_names = df_template["labels"].values
     del df_template
