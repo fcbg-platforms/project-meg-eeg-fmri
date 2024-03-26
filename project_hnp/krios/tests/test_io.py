@@ -59,3 +59,12 @@ def test_read_krios_rotation_to_template(krios_file: Path):
     assert_allclose(s_reg, 1.0, rtol=1e-3)
     assert_allclose(R_reg, np.eye(3, dtype=np.float64), atol=1e-2)
     assert_allclose(t_reg, np.zeros(3, dtype=np.float64), atol=1e-1)
+
+
+def test_read_krios_missing_electrode():
+    """Test reading files with missing electrodes."""
+    elc1, fid1 = read_krios(files("project_hnp.krios") / "tests" / "data" / "2.csv")
+    with pytest.warns(RuntimeWarning, match="Some electrodes are missing"):
+        elc2, fid2 = read_krios(files("project_hnp.krios") / "tests" / "data" / "1.csv")
+    assert elc1.shape == elc2.shape
+    assert fid1.shape == fid2.shape
