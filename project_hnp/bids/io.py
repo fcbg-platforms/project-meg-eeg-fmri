@@ -222,7 +222,7 @@ def _write_eeg_datasets(
         ch_names2rename = [
             ch
             for ch in raw.ch_names
-            if not ch.startswith("DIN") or ch.startswith("STI")
+            if not (ch.startswith("DIN") or ch.startswith("STI"))
         ]
         raw.rename_channels(
             {ch1: ch2 for ch1, ch2 in zip(ch_names2rename, ch_names, strict=True)}
