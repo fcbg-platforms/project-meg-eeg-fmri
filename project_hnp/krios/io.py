@@ -11,7 +11,7 @@ from mne.defaults import HEAD_SIZE_DEFAULT as _HEAD_SIZE_DEFAULT
 from pycpd import RigidRegistration
 
 from ..utils._checks import ensure_path
-from ._transform import fit_matched_points, krios_to_head_coordinate, reorder_electrodes
+from ._transform import krios_to_head_coordinate, reorder_electrodes
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -95,7 +95,9 @@ def read_krios_montage(fname: Path | str) -> DigMontage:
     fid_standard = np.array(
         [standard["rpa"], standard["lpa"], standard["nasion"]], dtype=np.float64
     )
-    _, scaling = fit_matched_points(fid, fid_standard, scale=True)
+    scaling = np.average(
+        np.linalg.norm(fid_standard, axis=1) / np.linalg.norm(fid, axis=1)
+    )
     elc *= scaling
     fid *= scaling
     # figure out labels from template
