@@ -62,7 +62,7 @@ def read_krios(fname: Path | str) -> tuple[NDArray[np.float64], NDArray[np.float
     # - s_reg : float, the scale of the registration
     # - R_reg : array of shape (3, 3), the rotation matrix of the registration
     # - t_reg : array of shape (1, 3), the translation vector of the registration
-    elc_TY, _, _, _ = RigidRegistration(X=elc_template, Y=elc).register()  # TODO: check
+    elc_TY, _ = RigidRegistration(X=elc_template, Y=elc).register()  # TODO: check
     # reorder electrodes according to template
-    elc_reordered, _ = reorder_electrodes(elc_TY, elc_template)
+    elc_reordered = reorder_electrodes(elc_TY, elc_template)
     return elc_reordered, fid

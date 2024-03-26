@@ -98,7 +98,7 @@ def reorder_electrodes(
         elc_reordered[idx, :] = template[idx, :]
         warn(
             "Some electrodes are missing in the scanned data and have been filled from "
-            "the template.",
+            f"the template. Missing electrodes idx: {idx}.",
             RuntimeWarning,
             stacklevel=3,
         )
