@@ -1,3 +1,5 @@
+from . import bids  # noqa: F401
+from . import krios  # noqa: F401
 from . import utils  # noqa: F401
 from ._version import __version__  # noqa: F401
 from .utils.config import sys_info  # noqa: F401
