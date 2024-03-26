@@ -16,7 +16,7 @@ def krios_to_head_coordinate(
     rpa: NDArray[np.float64],
     lpa: NDArray[np.float64],
     nz: NDArray[np.float64],
-) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
     """Transform Krios coordinates to head coordinates.
 
     Parameters
@@ -65,7 +65,12 @@ def krios_to_head_coordinate(
     fid = np.matmul(T, np.array([rpa, lpa, nz]).T).T
     # change origin
     origin_shift = [fid[2, 0], fid[0, 1], fid[2, 2]]
-    elc = elc - np.tile(origin_shift, (elc.shape[0], 1))
+    elc -= np.tile(origin_shift, (elc.shape[0], 1))
+    fid -= np.tile(origin_shift, (fid.shape[0], 1))
+    # sanity-checks
+    assert np.allclose(fid[0, 1:], np.zeros(2))  # RPA
+    assert np.allclose(fid[1, 1:], np.zeros(2))  # LPA
+    assert np.allclose(fid[2, np.array([0, 2], dtype=np.int8)], np.zeros(2))  # NZ
     return elc, fid, T
 
 

@@ -66,3 +66,14 @@ def read_krios(fname: Path | str) -> tuple[NDArray[np.float64], NDArray[np.float
     # reorder electrodes according to template
     elc_reordered = reorder_electrodes(elc_TY, elc_template)
     return elc_reordered, fid
+
+
+def read_krios_montage(fname: Path | str):
+    """Read electrode locations from a Krios file in a DigMontage.
+
+    Parameters
+    ----------
+    fname : Path | str
+        Path to the Krios file.
+    """
+    elc_reordered, fid = read_krios(fname)
