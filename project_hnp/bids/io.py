@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
 from importlib.resources import files
 from typing import TYPE_CHECKING
 from warnings import warn
@@ -33,6 +35,7 @@ if TYPE_CHECKING:
 
 def bidsification(
     root: Path | str,
+    root_raw: Path | str,
     subject: int,
     data_eeg: Path | str,
     data_meg: Path | str,
@@ -44,6 +47,8 @@ def bidsification(
     ----------
     root : Path | str
         Path to the root of the BIDS dataset.
+    root_raw : Path | str
+        Path to the root of the BIDS dataset containing raw/unconverted files.
     subject : int
         Subject number.
     data_eeg : Path | str
@@ -54,6 +59,7 @@ def bidsification(
         Path to the MRI dataset.
     """
     root = ensure_path(root, must_exist=True)
+    root_raw = ensure_path(root_raw, must_exist=True)
     subject = ensure_int(subject, "subject")
     if subject <= 0:
         raise ValueError(
@@ -63,14 +69,17 @@ def bidsification(
     data_meg = ensure_path(data_meg, must_exist=True)
     data_mri = ensure_path(data_mri, must_exist=True)
     bids_path = BIDSPath(root=root, subject=str(subject).zfill(2))
-    _write_eeg_datasets(bids_path, data_eeg)
-    _write_mri_datasets(bids_path, data_mri)
-    _write_meg_datasets(bids_path, data_meg)  # MEG last to overwrite participant info
+    bids_path_raw = BIDSPath(root=root_raw, subject=str(subject).zfill(2))
+    _write_eeg_datasets(bids_path, bids_path_raw, data_eeg)
+    _write_mri_datasets(bids_path, bids_path_raw, data_mri)
+    # MEG last to overwrite participant info
+    _write_meg_datasets(bids_path, bids_path_raw, data_meg)
 
 
 @fill_doc
 def _write_meg_datasets(
     bids_path: BIDSPath,
+    bids_path_raw: BIDSPath,
     data_meg: Path,
 ) -> None:
     """Write MEG datasets.
@@ -78,11 +87,14 @@ def _write_meg_datasets(
     Parameters
     ----------
     %(bids_path_root_sub)s
+    %(bids_path_root_raw_sub)s
     data_meg : Path
         Path to the MEG dataset.
     """
     assert bids_path.root is not None
     assert bids_path.subject is not None
+    assert bids_path_raw.root is not None
+    assert bids_path_raw.subject is not None
     empty_room = None
     for file in data_meg.glob("*.fif"):
         finfo = file.stem.split("_")
@@ -110,11 +122,16 @@ def _write_meg_datasets(
         empty_room = read_raw_fif(empty_room)
     # now that the input is validated, we can update the BIDS dataset
     bids_path.update(datatype="meg")
+    bids_path_raw.update(datatype="meg", suffix="meg")
     _write_meg_calibration_crosstalk(bids_path)
     for file in data_meg.glob("*.fif"):
         finfo = file.stem.split("_")
         task = finfo[3].lower()
-        if task == "noise":
+        bids_path_raw.update(task=task, extension=".fif")
+        os.makedirs(bids_path_raw.fpath.parent, exist_ok=True)
+        if task == "noise":  # only move RAW file
+            raw = read_raw_fif(file)
+            raw.save(bids_path_raw.fpath, overwrite=True)
             continue
         bids_path.update(task=task)
         raw = read_raw_fif(file)
@@ -129,6 +146,7 @@ def _write_meg_datasets(
         sidecar_fname = bids_path.copy().update(
             suffix=bids_path.datatype, extension=".json"
         )
+        raw.save(bids_path_raw.fpath, overwrite=True)
         _write_dewar_position("68°", sidecar_fname.fpath)
 
 
@@ -164,6 +182,7 @@ def _write_dewar_position(position: str, sidecar_fname: Path):
 @fill_doc
 def _write_eeg_datasets(
     bids_path: BIDSPath,
+    bids_path_raw: BIDSPath,
     data_eeg: Path,
 ) -> None:
     """Write EEG datasets.
@@ -171,16 +190,26 @@ def _write_eeg_datasets(
     Parameters
     ----------
     %(bids_path_root_sub)s
+    %(bids_path_root_raw_sub)s
     data_eeg : Path
         Path to the EEG dataset.
     """
     assert bids_path.root is not None
     assert bids_path.subject is not None
+    assert bids_path_raw.root is not None
+    assert bids_path_raw.subject is not None
     files = [file for file in data_eeg.glob("*.csv")]
     if len(files) == 0:
         montage = None
     elif len(files) == 1:
         montage = read_krios_montage(files[0])
+        dst = (
+            bids_path_raw.copy()
+            .update(datatype="eeg", suffix="eeg", extension=".json")
+            .fpath
+        )
+        os.makedirs(dst.parent, exist_ok=True)
+        shutil.copy2(files[0], dst.with_suffix(".csv"))
     else:
         raise ValueError(
             "Expected only one Krios digitization file, got "
@@ -215,9 +244,12 @@ def _write_eeg_datasets(
     # now that the input is validated, we can update the BIDS dataset
     ch_names = read_EGI_ch_names()
     bids_path.update(datatype="eeg")
+    bids_path_raw.update(datatype="eeg", suffix="eeg")
     for file in data_eeg.glob("*.mff"):
         finfo = file.stem.split("_")
-        bids_path.update(task=finfo[1].split("-")[1])
+        task = finfo[1].split("-")[1]
+        bids_path.update(task=task)
+        bids_path_raw.update(task=task)
         raw = read_raw_egi(file)
         ch_names2rename = [
             ch
@@ -236,11 +268,20 @@ def _write_eeg_datasets(
             event_id=None,  # TODO: validate event IDs based on constants
             overwrite=True,
         )
+        # copy original to bids_path_raw location, .mff are not handled equally between
+        # win, linux and macOS
+        if file.is_file():
+            os.makedirs(bids_path_raw.fpath.parent, exist_ok=True)
+            shutil.copy2(file, bids_path_raw.fpath.with_suffix(".mff"))
+        elif file.is_dir():
+            os.makedirs(bids_path_raw.fpath.parent, exist_ok=True)
+            shutil.copytree(file, bids_path_raw.fpath.with_suffix(".mff"))
 
 
 @fill_doc
 def _write_mri_datasets(
     bids_path: BIDSPath,
+    bids_path_raw: BIDSPath,
     data_mri: Path,
 ) -> None:
     """Write MRI datasets.
@@ -248,11 +289,14 @@ def _write_mri_datasets(
     Parameters
     ----------
     %(bids_path_root_sub)s
+    %(bids_path_root_raw_sub)s
     data_mri : Path
         Path to the MRI dataset.
     """
     assert bids_path.root is not None
     assert bids_path.subject is not None
+    assert bids_path_raw.root is not None
+    assert bids_path_raw.subject is not None
     folders = [folder.name for folder in data_mri.iterdir() if folder.is_dir()]
     if set(folders) != EXPECTED_MRI:
         raise ValueError(f"Expected MRI folders {EXPECTED_MRI}, got {set(folders)}.")

@@ -20,7 +20,11 @@ docdict: dict[str, str] = dict()
 # -- B ---------------------------------------------------------------------------------
 docdict["bids_path_root_sub"] = """
 bids_path : BIDSPath
-        A :class:`~mne_bids.BIDSPath` with at least root and subject set."""
+    A :class:`~mne_bids.BIDSPath` with at least root and subject set."""
+
+docdict["bids_path_root_raw_sub"] = """
+bids_path : BIDSPath
+    A :class:`~mne_bids.BIDSPath` with at least root and subject set (raw data)."""
 
 # -- C ---------------------------------------------------------------------------------
 # -- D ---------------------------------------------------------------------------------
