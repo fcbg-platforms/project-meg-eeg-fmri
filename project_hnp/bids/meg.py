@@ -7,12 +7,7 @@ from typing import TYPE_CHECKING
 from warnings import warn
 
 from mne.io import read_raw_fif
-from mne_bids import (
-    BIDSPath,
-    write_meg_calibration,
-    write_meg_crosstalk,
-    write_raw_bids,
-)
+from mne_bids import write_meg_calibration, write_meg_crosstalk, write_raw_bids
 from mne_bids.utils import _write_json
 
 from ..utils._docs import fill_doc
@@ -20,6 +15,8 @@ from ._utils import validate_bids_paths, validate_data_MEG
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from mne_bids import BIDSPath
 
 
 @fill_doc
@@ -34,8 +31,7 @@ def write_meg_datasets(
     ----------
     %(bids_path_root_sub)s
     %(bids_path_root_raw_sub)s
-    data_meg : Path
-        Path to the MEG dataset.
+    %(data_meg)s
     """
     validate_bids_paths(bids_path, bids_path_raw)
     validate_data_MEG(data_meg, int(bids_path.subject))
@@ -80,15 +76,8 @@ def write_meg_datasets(
         raw.save(bids_path_raw.fpath, overwrite=True)
 
 
-def _write_meg_calibration_crosstalk(bids_path) -> None:
-    """Write MEG calibration and crosstalk files.
-
-    Parameters
-    ----------
-    bids_path : BIDSPath
-        A :class:`~mne_bids.BIDSPath` with at least root amd subject set, and with
-        datatype set to 'meg'.
-    """
+def _write_meg_calibration_crosstalk(bids_path: BIDSPath) -> None:
+    """Write MEG calibration and crosstalk files."""
     assert bids_path.root is not None
     assert bids_path.subject is not None
     assert bids_path.datatype == "meg"
