@@ -84,16 +84,16 @@ def read_krios_montage(fname: Path | str) -> DigMontage:
     montage : DigMontage
         MNE channel montage for the EEG electrodes in the head coordinate frame.
     """
-    elc_reordered, fid = read_krios(fname)
+    elc, fid = read_krios(fname)
     df_template = pd.read_csv(_TEMPLATE_FNAME, sep=" ", header=0, skipinitialspace=True)
     ch_names = df_template["labels"].values
     del df_template
-    if elc_reordered.shape[0] != ch_names.size:
+    if elc.shape[0] != ch_names.size:
         raise ValueError(
-            f"Number of electrodes ({elc_reordered.shape[0]}) does not match the "
+            f"Number of electrodes ({elc.shape[0]}) does not match the "
             f"number of channel names ({ch_names.size}) in the template."
         )
-    ch_pos = dict(zip(ch_names, elc_reordered, strict=True))
+    ch_pos = dict(zip(ch_names, elc, strict=True))
     return make_dig_montage(
         ch_pos=ch_pos,
         nasion=fid[2, :],
