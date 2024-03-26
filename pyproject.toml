@@ -24,8 +24,11 @@ dependencies = [
   'nibabel',
   'numpy>=1.21',
   'packaging',
+  'pandas',
   'psutil',
   'pybv',
+  'pycpd',
+  'scipy',
 ]
 description = 'Comparison of localisation in fMRI/MEG/EEG.'
 keywords = [
@@ -148,7 +151,8 @@ select = ['A', 'B', 'E', 'F', 'UP', 'W']
 include-package-data = false
 
 [tool.setuptools.package-data]
-"projecz_hnp.bids" = ["assets/*"]
+"project_hnp.bids" = ["assets/*"]
+"project_hnp.krios" = ["assets/*"]
 
 [tool.setuptools.packages.find]
 exclude = ['project_hnp*tests']
