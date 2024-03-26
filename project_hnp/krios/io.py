@@ -119,9 +119,7 @@ def read_krios_montage(fname: Path | str) -> DigMontage:
     elc *= scaling
     fid *= scaling
     # figure out labels from template
-    ch_names = np.loadtxt(
-        _TEMPLATE_FNAME, skiprows=1, usecols=3, max_rows=257, dtype=str
-    )
+    ch_names = read_EGI_ch_names()
     if elc.shape[0] != ch_names.size:
         raise ValueError(
             f"Number of electrodes ({elc.shape[0]}) does not match the "
@@ -135,3 +133,8 @@ def read_krios_montage(fname: Path | str) -> DigMontage:
         rpa=fid[0, :],
         coord_frame="head",
     )
+
+
+def read_EGI_ch_names() -> NDArray:
+    """Read channel names from the Krios template file."""
+    return np.loadtxt(_TEMPLATE_FNAME, skiprows=1, usecols=3, max_rows=257, dtype=str)

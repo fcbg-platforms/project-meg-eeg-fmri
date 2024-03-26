@@ -15,9 +15,11 @@ from mne_bids import (
 )
 from mne_bids.utils import _write_json
 
+from ..krios import read_EGI_ch_names, read_krios_montage
 from ..utils._checks import ensure_int, ensure_path
 from ..utils._docs import fill_doc
 from ._constants import (
+    EGI_CH_TO_DROP,
     EXPECTED_EEG,
     EXPECTED_MEG,
     EXPECTED_MRI,
@@ -174,6 +176,16 @@ def _write_eeg_datasets(
     """
     assert bids_path.root is not None
     assert bids_path.subject is not None
+    files = [file for file in data_eeg.glob("*.csv")]
+    if len(files) == 0:
+        montage = None
+    elif len(files) == 1:
+        montage = read_krios_montage(files[0])
+    else:
+        raise ValueError(
+            "Expected only one Krios digitization file, got "
+            f"{[file.name for file in files]}."
+        )
     for file in data_eeg.glob("*.mff"):
         finfo = file.stem.split("_")
         assert finfo[0].startswith("sub")  # sanity-check
@@ -201,11 +213,22 @@ def _write_eeg_datasets(
                 f"Unexpected task name '{task}' in filename '{file.name}'."
             )
     # now that the input is validated, we can update the BIDS dataset
+    ch_names = read_EGI_ch_names()
     bids_path.update(datatype="eeg")
     for file in data_eeg.glob("*.mff"):
         finfo = file.stem.split("_")
         bids_path.update(task=finfo[1].split("-")[1])
         raw = read_raw_egi(file)
+        ch_names2rename = [
+            ch
+            for ch in raw.ch_names
+            if not ch.startswith("DIN") or ch.startswith("STI")
+        ]
+        raw.rename_channels(
+            {ch1: ch2 for ch1, ch2 in zip(ch_names2rename, ch_names, strict=True)}
+        )
+        raw.set_montage(montage)
+        raw.drop_channels(EGI_CH_TO_DROP)
         write_raw_bids(
             raw,
             bids_path,
