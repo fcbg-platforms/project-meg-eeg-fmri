@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_allclose
+from pycpd import RigidRegistration
 
-from project_hnp.krios._transform import fit_matched_points
 from project_hnp.krios.io import _TEMPLATE_FNAME, read_krios
 
 if TYPE_CHECKING:
@@ -53,5 +53,9 @@ def test_read_krios_rotation_to_template(krios_file: Path):
     elc, _ = read_krios(krios_file)
     df_template = pd.read_csv(_TEMPLATE_FNAME, sep=" ", header=0, skipinitialspace=True)
     elc_template = df_template.loc[:, ["x", "y", "z"]].to_numpy()
-    quat, s = fit_matched_points(elc, elc_template, scale=True)
-    assert_allclose(s, 1.0, rtol=1e-2)
+    # tolerance are flexible because the template and an actual head shape scan vary
+    # greatly.
+    _, (s_reg, R_reg, t_reg) = RigidRegistration(X=elc_template, Y=elc).register()
+    assert_allclose(s_reg, 1.0, rtol=1e-3)
+    assert_allclose(R_reg, np.eye(3, dtype=np.float64), atol=1e-2)
+    assert_allclose(t_reg, np.zeros(3, dtype=np.float64), atol=1e-1)
