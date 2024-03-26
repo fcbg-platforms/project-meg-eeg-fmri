@@ -24,7 +24,6 @@ dependencies = [
   'nibabel',
   'numpy>=1.21',
   'packaging',
-  'pandas',
   'psutil',
   'pybv',
   'pycpd',

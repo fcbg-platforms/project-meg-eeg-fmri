@@ -1,4 +1,4 @@
-x y z labels
+257  125.649
   6.4611267e+01  4.6721493e+01 -3.4683353e+01               1
   5.9958572e+01  5.7243385e+01 -1.1533134e+01              F8
   5.2351357e+01  6.5079796e+01  6.5544338e+00               3
@@ -256,3 +256,6 @@ x y z labels
  -6.7503265e+01  7.8181300e+00 -9.2840622e+01             255
  -6.1778473e+01 -7.2990899e+00 -1.0462537e+02             256
   0.0000000e+00 -3.7907569e+00  7.3205482e+01              Cz
+
+Done by Denis Brunet, 2011, at the Functional Brain Mapping, Geneva, for Prof. Christoph Michel
+MRI scans were done by Laurent Spinelli, Geneva University Hospital

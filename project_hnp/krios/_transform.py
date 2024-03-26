@@ -13,9 +13,7 @@ if TYPE_CHECKING:
 
 def krios_to_head_coordinate(
     elc: NDArray[np.float64],
-    rpa: NDArray[np.float64],
-    lpa: NDArray[np.float64],
-    nz: NDArray[np.float64],
+    fid: NDArray[np.float64],
 ) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
     """Transform Krios coordinates to head coordinates.
 
@@ -23,12 +21,8 @@ def krios_to_head_coordinate(
     ----------
     elc : array of shape (n_electrodes, 3)
         (x, y, z) coordinates of the EEG electrodes.
-    rpa : array of shape (3,)
-        (x, y, z) coordinates of the right pre-auricular point.
-    lpa : array of shape (3,)
-        (x, y, z) coordinates of the left pre-auricular point.
-    nz : array of shape (3,)
-        (x, y, z) coordinates of the nasion.
+    fid : array of shape (3, 3)
+        (x, y, z) coordinates of the RPA, LPA and Nasion.
 
     Returns
     -------
@@ -40,16 +34,13 @@ def krios_to_head_coordinate(
     T : array of shape (3, 3)
         Transformation matrix from the Krios to the head coordinate system.
     """
-    for var in (elc, rpa, lpa, nz):  # sanity-checks
+    for var in (elc, fid):  # sanity-checks
         assert var.dtype == np.float64
         assert var.shape[-1] == 3
-    assert elc.ndim == 2
-    assert rpa.ndim == 1
-    assert lpa.ndim == 1
-    assert nz.ndim == 1
+        assert var.ndim == 2
     # define coordinate system
-    x = rpa - lpa  # left to right axis
-    xy = nz - lpa  # vector on the xy plan
+    x = fid[0, :] - fid[1, :]  # left to right axis, RPA - LPA
+    xy = fid[2, :] - fid[1, :]  # vector on the xy plan, NZ - LPA
     z = np.cross(x, xy)  # bottom to top axis = normal to xy plan
     y = np.cross(z, x)  # back to front axis = normal to zx plan
     x = x / np.linalg.norm(x, 2)
@@ -62,7 +53,7 @@ def krios_to_head_coordinate(
     T[2, :] = z
     # apply transformation to electrodes and fiducials
     elc = np.matmul(T, elc.T).T
-    fid = np.matmul(T, np.array([rpa, lpa, nz], dtype=np.float64).T).T
+    fid = np.matmul(T, fid.T).T
     # change origin
     origin_shift = [fid[2, 0], fid[0, 1], fid[2, 2]]
     elc -= np.tile(origin_shift, (elc.shape[0], 1))

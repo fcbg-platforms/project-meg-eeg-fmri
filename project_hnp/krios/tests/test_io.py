@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
 import pytest
 from numpy.testing import assert_allclose
 from pycpd import RigidRegistration
@@ -51,8 +50,9 @@ def test_read_krios(krios_file: Path):
 def test_read_krios_rotation_to_template(krios_file: Path):
     """Test that the transformation from read points to the template is identity."""
     elc, _ = read_krios(krios_file)
-    df_template = pd.read_csv(_TEMPLATE_FNAME, sep=" ", header=0, skipinitialspace=True)
-    elc_template = df_template.loc[:, ["x", "y", "z"]].to_numpy()
+    elc_template = np.loadtxt(
+        _TEMPLATE_FNAME, skiprows=1, usecols=(0, 1, 2), max_rows=257, dtype=np.float64
+    )
     # tolerance are flexible because the template and an actual head shape scan vary
     # greatly.
     _, (s_reg, R_reg, t_reg) = RigidRegistration(X=elc_template, Y=elc).register()

@@ -4,7 +4,6 @@ from importlib.resources import files
 from typing import TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
 from mne.channels import make_dig_montage, make_standard_montage
 from mne.channels.montage import _get_montage_in_head
 from mne.defaults import HEAD_SIZE_DEFAULT as _HEAD_SIZE_DEFAULT
@@ -24,7 +23,7 @@ _LPA_LABEL: str = "LEFT_PP_MARKER"
 _RPA_LABEL: str = "RIGHT_PP_MARKER"
 _NZ_LABEL: str = "NASION_MARKER"
 _TEMPLATE_FNAME: Path = (
-    files("project_hnp.krios") / "assets" / "EGI 257.Geneva Average 13.10-10__.xyz"
+    files("project_hnp.krios") / "assets" / "EGI 257.Geneva Average 13.10-10.xyz"
 )
 
 
@@ -45,21 +44,38 @@ def read_krios(fname: Path | str) -> tuple[NDArray[np.float64], NDArray[np.float
         RPA, LPA, NZ.
     """
     fname = ensure_path(fname, must_exist=True)
-    df = pd.read_csv(fname, sep=",", header=0)
-    eeg_idx = (df["Special Sensor"] == "EEG").to_numpy()
-    lpa_idx = (df["Special Sensor"] == _LPA_LABEL).to_numpy()
-    rpa_idx = (df["Special Sensor"] == _RPA_LABEL).to_numpy()
-    nz_idx = (df["Special Sensor"] == _NZ_LABEL).to_numpy()
+    df = np.loadtxt(
+        fname,
+        delimiter=",",
+        dtype=np.dtype([("Ref", "U7"), ("xyz", np.float64, (3,)), ("type", "U15")]),
+        skiprows=1,
+        usecols=(2, 3, 4, 5, 6),
+    )
+    # let's start to filter out some duplicates
+    refs = [elt[0] for elt in df]
+    types = [elt[2] for elt in df]
+    df = np.array([elt[1] for elt in df], dtype=np.float64)
+    fid_idx = np.array(
+        [types.index(_RPA_LABEL), types.index(_LPA_LABEL), types.index(_NZ_LABEL)],
+        dtype=int,
+    )
+    eeg_idx = np.array(
+        [
+            k
+            for k, elt in enumerate(zip(refs, types, strict=True))
+            if elt[0].lower().strip() == "scanned" and elt[1].lower().strip() == "eeg"
+        ],
+        dtype=int,
+    )
     # extract (x, y, z) coordinates as array of shape (n_scanned, 3)
-    elc = df.loc[eeg_idx, ["x(cm)", "y(cm)", "z(cm)"]].to_numpy()
-    rpa = np.squeeze(df.loc[rpa_idx, ["x(cm)", "y(cm)", "z(cm)"]].to_numpy())
-    lpa = np.squeeze(df.loc[lpa_idx, ["x(cm)", "y(cm)", "z(cm)"]].to_numpy())
-    nz = np.squeeze(df.loc[nz_idx, ["x(cm)", "y(cm)", "z(cm)"]].to_numpy())
+    elc = df[eeg_idx, :]
+    fid = df[fid_idx, :]
     del df
-    elc, fid, _ = krios_to_head_coordinate(elc, rpa=rpa, lpa=lpa, nz=nz)
+    elc, fid, _ = krios_to_head_coordinate(elc, fid)
     # read template file
-    df_template = pd.read_csv(_TEMPLATE_FNAME, sep=" ", header=0, skipinitialspace=True)
-    elc_template = df_template.loc[:, ["x", "y", "z"]].to_numpy()
+    elc_template = np.loadtxt(
+        _TEMPLATE_FNAME, skiprows=1, usecols=(0, 1, 2), max_rows=257, dtype=np.float64
+    )
     # co-register with template
     # RigidRegistration(...).register() returns 2 elements:
     # - TY : array of shape (n_points, 3), the registered and transformed source points
@@ -101,9 +117,9 @@ def read_krios_montage(fname: Path | str) -> DigMontage:
     elc *= scaling
     fid *= scaling
     # figure out labels from template
-    df_template = pd.read_csv(_TEMPLATE_FNAME, sep=" ", header=0, skipinitialspace=True)
-    ch_names = df_template["labels"].values
-    del df_template
+    ch_names = np.loadtxt(
+        _TEMPLATE_FNAME, skiprows=1, usecols=3, max_rows=257, dtype=str
+    )
     if elc.shape[0] != ch_names.size:
         raise ValueError(
             f"Number of electrodes ({elc.shape[0]}) does not match the "
