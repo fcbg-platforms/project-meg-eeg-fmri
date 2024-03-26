@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING
 from mne_bids import BIDSPath
 
 from ..utils._checks import ensure_int, ensure_path
-from ._eeg import write_eeg_datasets
-from ._meg import write_meg_datasets
-from ._mri import write_mri_datasets
+from .eeg import write_eeg_datasets
+from .meg import write_meg_datasets
+from .mri import write_mri_datasets
 
 if TYPE_CHECKING:
     from pathlib import Path

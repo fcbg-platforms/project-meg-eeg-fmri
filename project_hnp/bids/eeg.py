@@ -10,6 +10,7 @@ from mne_bids import BIDSPath, write_raw_bids
 from ..krios import read_EGI_ch_names, read_krios_montage
 from ..utils._docs import fill_doc
 from ._constants import EGI_CH_TO_DROP, EXPECTED_EEG
+from ._utils import validate_bids_paths
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -30,10 +31,7 @@ def write_eeg_datasets(
     data_eeg : Path
         Path to the EEG dataset.
     """
-    assert bids_path.root is not None
-    assert bids_path.subject is not None
-    assert bids_path_raw.root is not None
-    assert bids_path_raw.subject is not None
+    validate_bids_paths(bids_path, bids_path_raw)
     files = [file for file in data_eeg.glob("*.csv")]
     if len(files) == 0:
         montage = None

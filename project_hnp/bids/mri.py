@@ -6,13 +6,14 @@ from mne_bids import BIDSPath, write_anat
 
 from ..utils._docs import fill_doc
 from ._constants import EXPECTED_MRI, EXPECTED_fMRI_T1
+from ._utils import validate_bids_paths
 
 if TYPE_CHECKING:
     from pathlib import Path
 
 
 @fill_doc
-def _write_mri_datasets(
+def write_mri_datasets(
     bids_path: BIDSPath,
     bids_path_raw: BIDSPath,
     data_mri: Path,
@@ -26,10 +27,7 @@ def _write_mri_datasets(
     data_mri : Path
         Path to the MRI dataset.
     """
-    assert bids_path.root is not None
-    assert bids_path.subject is not None
-    assert bids_path_raw.root is not None
-    assert bids_path_raw.subject is not None
+    validate_bids_paths(bids_path, bids_path_raw)
     folders = [folder.name for folder in data_mri.iterdir() if folder.is_dir()]
     if set(folders) != EXPECTED_MRI:
         raise ValueError(f"Expected MRI folders {EXPECTED_MRI}, got {set(folders)}.")

@@ -16,7 +16,7 @@ from mne_bids import (
 from mne_bids.utils import _write_json
 
 from ..utils._docs import fill_doc
-from ._constants import EXPECTED_MEG, OPTIONAL_MEG
+from ._utils import validate_bids_paths, validate_data_MEG
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -37,44 +37,28 @@ def write_meg_datasets(
     data_meg : Path
         Path to the MEG dataset.
     """
-    assert bids_path.root is not None
-    assert bids_path.subject is not None
-    assert bids_path_raw.root is not None
-    assert bids_path_raw.subject is not None
-    empty_room = None
+    validate_bids_paths(bids_path, bids_path_raw)
+    validate_data_MEG(data_meg, int(bids_path.subject))
     for file in data_meg.glob("*.fif"):
-        finfo = file.stem.split("_")
-        assert finfo[0] == "sub"  # sanity-check
-        if int(bids_path.subject) != int(finfo[1]):
-            raise ValueError(
-                f"The subject number in the filename ({int(finfo[1])}) does not match "
-                "the subject number requested in the BIDS path "
-                f"({int(bids_path.subject)})."
-            )
-        assert finfo[2] == "task"  # sanity-check
-        if finfo[3].lower() not in EXPECTED_MEG.union(OPTIONAL_MEG):
-            raise ValueError(
-                f"Unexpected task name '{finfo[3]}' in filename '{file.name}'."
-            )
-        if finfo[3].lower() == "noise":
-            empty_room = file
-    if empty_room is None:
+        task = file.stem.split("_")[3].lower()
+        if task == "noise":
+            empty_room = read_raw_fif(file)
+            break
+    else:
         warn(
             RuntimeWarning,
             f"The empty-room recording is missing in '{str(data_meg)}'.",
             stacklevel=2,
         )
-    else:
-        empty_room = read_raw_fif(empty_room)
-    # now that the input is validated, we can update the BIDS dataset
+    # update BIDSPath and create folders if necessary
     bids_path.update(datatype="meg")
-    bids_path_raw.update(datatype="meg", suffix="meg")
+    bids_path_raw.update(datatype="meg", suffix="meg", extension=".fif")
+    os.makedirs(bids_path_raw.fpath.parent, exist_ok=True)
+    # save BIDS and raw dataset
     _write_meg_calibration_crosstalk(bids_path)
     for file in data_meg.glob("*.fif"):
-        finfo = file.stem.split("_")
-        task = finfo[3].lower()
-        bids_path_raw.update(task=task, extension=".fif")
-        os.makedirs(bids_path_raw.fpath.parent, exist_ok=True)
+        task = file.stem.split("_")[3].lower()
+        bids_path_raw.update(task=task)
         if task == "noise":  # only move RAW file
             raw = read_raw_fif(file)
             raw.save(bids_path_raw.fpath, overwrite=True)
@@ -92,8 +76,8 @@ def write_meg_datasets(
         sidecar_fname = bids_path.copy().update(
             suffix=bids_path.datatype, extension=".json"
         )
-        raw.save(bids_path_raw.fpath, overwrite=True)
         _write_dewar_position("68°", sidecar_fname.fpath)
+        raw.save(bids_path_raw.fpath, overwrite=True)
 
 
 def _write_meg_calibration_crosstalk(bids_path) -> None:
