@@ -60,7 +60,6 @@ def bidsification(
     data_eeg = ensure_path(data_eeg, must_exist=True)
     data_meg = ensure_path(data_meg, must_exist=True)
     data_mri = ensure_path(data_mri, must_exist=True)
-
     bids_path = BIDSPath(root=root, subject=str(subject).zfill(2))
     _write_eeg_datasets(bids_path, data_eeg)
     _write_mri_datasets(bids_path, data_mri)
