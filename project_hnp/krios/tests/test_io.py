@@ -6,10 +6,12 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
+from mne.channels import DigMontage
+from mne.defaults import HEAD_SIZE_DEFAULT
 from numpy.testing import assert_allclose
 from pycpd import RigidRegistration
 
-from project_hnp.krios.io import _TEMPLATE_FNAME, read_krios
+from project_hnp.krios.io import _TEMPLATE_FNAME, read_krios, read_krios_montage
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -68,3 +70,15 @@ def test_read_krios_missing_electrode():
         elc2, fid2 = read_krios(files("project_hnp.krios") / "tests" / "data" / "1.csv")
     assert elc1.shape == elc2.shape
     assert fid1.shape == fid2.shape
+
+
+@pytest.mark.filterwarnings("ignore:Some electrodes are missing*:RuntimeWarning")
+def test_read_krios_montage(krios_file: Path):
+    """Test reading a Krios .csv info a DigMontage."""
+    montage = read_krios_montage(krios_file)
+    assert isinstance(montage, DigMontage)
+    # check the coordinates on the XY plane
+    radius = HEAD_SIZE_DEFAULT * 1.5
+    elc = np.array([array for array in montage.get_positions()["ch_pos"].values()])
+    distances = np.linalg.norm(elc[:, :2], axis=1)
+    assert np.all(distances < radius)
