@@ -18,6 +18,10 @@ docdict: dict[str, str] = dict()
 
 # -- A ---------------------------------------------------------------------------------
 # -- B ---------------------------------------------------------------------------------
+docdict["bids_derivative"] = """
+derivative : Path | str
+    Path to the root of the BIDS dataset containing derivative files."""
+
 docdict["bids_root"] = """
 root : Path | str
     Path to the root of the BIDS dataset."""

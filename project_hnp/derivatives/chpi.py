@@ -12,11 +12,13 @@ from mne_bids import BIDSPath, read_raw_bids
 
 from ..bids._constants import EXPECTED_MEG, OPTIONAL_MEG
 from ..utils._checks import ensure_path, ensure_subject_int
+from ..utils._docs import fill_doc
 
 if TYPE_CHECKING:
     from pathlib import Path
 
 
+@fill_doc
 def compute_heas_pos(root: Path | str, derivative: Path | str, subject: int) -> None:
     """Compute the head position for the given subject.
 
@@ -26,8 +28,7 @@ def compute_heas_pos(root: Path | str, derivative: Path | str, subject: int) -> 
     Parameters
     ----------
     %(bids_root)s
-    derivative : Path | str
-        Path to the root of the BIDS dataset containing derivative files.
+    %(bids_derivative)s
     %(bids_subject)s
     """
     root = ensure_path(root, must_exist=True)
