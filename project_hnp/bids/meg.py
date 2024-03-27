@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 from importlib.resources import files
 from pathlib import Path
 from warnings import warn
@@ -15,9 +14,9 @@ from mne_bids import (
 )
 from mne_bids.utils import _write_json
 
-from ..utils._checks import ensure_path
+from ..utils._checks import ensure_path, ensure_subject_int
 from ..utils._docs import fill_doc
-from ._utils import ensure_subject_int, validate_data_MEG
+from ._utils import validate_data_MEG
 
 
 @fill_doc
@@ -51,8 +50,7 @@ def write_meg_datasets(
         datatype="meg",
         suffix="meg",
         extension=".fif",
-    )
-    os.makedirs(bids_path_raw.fpath.parent, exist_ok=True)
+    ).mkdir()
     # look for empty-room recording
     for file in data_meg.glob("*.fif"):
         task = file.stem.split("_")[3].lower()

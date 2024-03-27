@@ -6,7 +6,14 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from .._checks import check_type, check_value, check_verbose, ensure_int, ensure_path
+from .._checks import (
+    check_type,
+    check_value,
+    check_verbose,
+    ensure_int,
+    ensure_path,
+    ensure_subject_int,
+)
 
 
 def test_ensure_int():
@@ -112,3 +119,12 @@ def test_ensure_path():
 
     with pytest.raises(TypeError, match="path is invalid"):
         ensure_path(Foo(), must_exist=False)
+
+
+def test_ensure_subject_int():
+    """Test ensure_subject_int checker."""
+    assert ensure_subject_int(5) == 5
+    with pytest.raises(TypeError, match="must be an integer"):
+        ensure_subject_int("101")
+    with pytest.raises(ValueError, match="must be a positive integer"):
+        ensure_subject_int(-101)

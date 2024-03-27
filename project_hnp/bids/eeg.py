@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import shutil
 from typing import TYPE_CHECKING
 
@@ -8,11 +7,10 @@ from mne.io import read_raw_egi
 from mne_bids import BIDSPath, write_raw_bids
 
 from ..krios import read_EGI_ch_names, read_krios_montage
-from ..utils._checks import ensure_path
+from ..utils._checks import ensure_path, ensure_subject_int
 from ..utils._docs import fill_doc
 from ._constants import EGI_CH_TO_DROP
 from ._utils import (
-    ensure_subject_int,
     fetch_participant_information,
     validate_data_EEG,
     write_participant_information,
@@ -53,8 +51,7 @@ def write_eeg_datasets(
     bids_path = BIDSPath(root=root, subject=str(subject).zfill(2), datatype="eeg")
     bids_path_raw = BIDSPath(
         root=root_raw, subject=str(subject).zfill(2), datatype="eeg", suffix="eeg"
-    )
-    os.makedirs(bids_path_raw.fpath.parent, exist_ok=True)
+    ).mkdir()
     # look for montage
     files = [file for file in data_eeg.glob("*.csv")]
     if len(files) == 0:

@@ -247,3 +247,23 @@ def ensure_path(item: Any, must_exist: bool) -> Path:
     if must_exist and not item.exists():
         raise FileNotFoundError(f"The provided path '{str(item)}' does not exist.")
     return item
+
+
+@fill_doc
+def ensure_subject_int(subject: int) -> int:
+    """Ensure that the subject number is a positive integer.
+
+    Parameters
+    ----------
+    %(bids_subject)s
+
+    Returns
+    -------
+    %(bids_subject)s
+    """
+    subject = ensure_int(subject, "subject")
+    if subject <= 0:
+        raise ValueError(
+            f"Argument 'subject' must be a positive integer, got {subject}."
+        )
+    return subject

@@ -1,16 +1,14 @@
 from __future__ import annotations
 
-import os
 import shutil
 from typing import TYPE_CHECKING
 
 from mne_bids import BIDSPath, write_anat
 
-from ..utils._checks import ensure_path
+from ..utils._checks import ensure_path, ensure_subject_int
 from ..utils._docs import fill_doc
 from ._constants import EXPECTED_fMRI_T1
 from ._utils import (
-    ensure_subject_int,
     fetch_participant_information,
     validate_data_MRI,
     write_participant_information,
@@ -53,8 +51,7 @@ def write_mri_datasets(
         datatype="anat",
         suffix="T1w",
         task=None,
-    )
-    os.makedirs(bids_path_raw.fpath.parent, exist_ok=True)
+    ).mkdir()
     # look for existing participant information
     participant_info = fetch_participant_information(bids_path)
     # find anatomical MRI and write it to BIDS dataset

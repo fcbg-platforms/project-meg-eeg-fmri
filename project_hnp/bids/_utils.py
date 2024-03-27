@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 from mne_bids.read import _from_tsv
 from mne_bids.write import _write_tsv
 
-from ..utils._checks import ensure_int
 from ..utils._docs import fill_doc
 from ._constants import EXPECTED_EEG, EXPECTED_MEG, EXPECTED_MRI, OPTIONAL_MEG
 
@@ -13,26 +12,6 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from mne_bids import BIDSPath
-
-
-@fill_doc
-def ensure_subject_int(subject: int) -> int:
-    """Ensure that the subject number is a positive integer.
-
-    Parameters
-    ----------
-    %(bids_subject)s
-
-    Returns
-    -------
-    %(bids_subject)s
-    """
-    subject = ensure_int(subject, "subject")
-    if subject <= 0:
-        raise ValueError(
-            f"Argument 'subject' must be a positive integer, got {subject}."
-        )
-    return subject
 
 
 @fill_doc
