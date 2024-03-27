@@ -17,19 +17,6 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-@pytest.fixture(
-    scope="session",
-    params=[
-        file
-        for file in (files("project_hnp.krios") / "tests" / "data").iterdir()
-        if file.suffix == ".csv"
-    ],
-)
-def krios_file(request) -> Path:
-    """List of Krios files to test."""
-    return request.param
-
-
 @pytest.mark.filterwarnings("ignore:Some electrodes are missing*:RuntimeWarning")
 def test_read_krios(krios_file: Path):
     """Test that read points are within a sphere defined by the fiducials."""

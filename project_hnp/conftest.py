@@ -1,9 +1,12 @@
 from __future__ import annotations  # c.f. PEP 563, PEP 649
 
 import os
+from importlib.resources import files
 from pathlib import Path
 from typing import TYPE_CHECKING
 from warnings import warn
+
+import pytest
 
 if TYPE_CHECKING:
     from pytest import Config
@@ -33,3 +36,16 @@ def pytest_configure(config: Config) -> None:
             RuntimeWarning,
             stacklevel=1,
         )
+
+
+@pytest.fixture(
+    scope="session",
+    params=[
+        file
+        for file in (files("project_hnp.krios") / "tests" / "data").iterdir()
+        if file.suffix == ".csv"
+    ],
+)
+def krios_file(request) -> Path:
+    """List of Krios files to test."""
+    return request.param

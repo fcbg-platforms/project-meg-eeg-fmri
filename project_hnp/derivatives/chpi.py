@@ -6,7 +6,7 @@ from mne.chpi import (
     compute_chpi_amplitudes,
     compute_chpi_locs,
     compute_head_pos,
-    write_heas_pos,
+    write_head_pos,
 )
 from mne_bids import BIDSPath, read_raw_bids
 
@@ -49,4 +49,4 @@ def compute_heas_pos(root: Path | str, derivative: Path | str, subject: int) -> 
             bids_path_derivative.directory
             / f"{bids_path_derivative.basename}_head_pos.pos"
         )
-        write_heas_pos(fname, head_pos)
+        write_head_pos(fname, head_pos)
