@@ -25,12 +25,18 @@ def write_eeg_datasets(
     root: Path | str,
     root_raw: Path | str,
     subject: int,
-    data_eeg: Path,
+    data_eeg: Path | str,
 ) -> None:
     """Write EEG datasets.
 
+    The EEG dataset should contain the recordings in .mff format and a digitization in
+    .csv format.
+
     Parameters
     ----------
+    %(bids_root)s
+    %(bids_root_raw)s
+    %(bids_subject)s
     %(data_eeg)s
     """
     root = ensure_path(root, must_exist=True)

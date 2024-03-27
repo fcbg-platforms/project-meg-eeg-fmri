@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ..utils._docs import fill_doc
 from .eeg import write_eeg_datasets
 from .meg import write_meg_datasets
 from .mri import write_mri_datasets
@@ -10,6 +11,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
+@fill_doc
 def bidsification(
     root: Path | str,
     root_raw: Path | str,
@@ -22,18 +24,12 @@ def bidsification(
 
     Parameters
     ----------
-    root : Path | str
-        Path to the root of the BIDS dataset.
-    root_raw : Path | str
-        Path to the root of the BIDS dataset containing raw/unconverted files.
-    subject : int
-        Subject number.
-    data_eeg : Path | str
-        Path to the EEG dataset.
-    data_meg : Path | str
-        Path to the MEG dataset.
-    data_mri : Path | str
-        Path to the MRI dataset.
+    %(bids_root)s
+    %(bids_root_raw)s
+    %(bids_subject)s
+    %(data_eeg)s
+    %(data_meg)s
+    %(data_mri)s
     """
     write_eeg_datasets(root, root_raw, subject, data_eeg)
     write_mri_datasets(root, root_raw, subject, data_mri)

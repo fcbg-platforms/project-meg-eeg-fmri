@@ -10,8 +10,18 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
+@fill_doc
 def ensure_subject_int(subject: int) -> int:
-    """Ensure that the subject number is a positive integer."""
+    """Ensure that the subject number is a positive integer.
+
+    Parameters
+    ----------
+    %(bids_subject)s
+
+    Returns
+    -------
+    %(bids_subject)s
+    """
     subject = ensure_int(subject, "subject")
     if subject <= 0:
         raise ValueError(
@@ -27,8 +37,7 @@ def validate_data_MEG(data_meg: Path | str, subject: int) -> None:
     Parameters
     ----------
     %(data_meg)s
-    subject : int
-        Subject number.
+    %(bids_subject)s
     """
     data_meg = ensure_path(data_meg, must_exist=True)
     for file in data_meg.glob("*.fif"):
@@ -53,8 +62,7 @@ def validate_data_EEG(data_eeg: Path | str, subject: int) -> None:
     Parameters
     ----------
     %(data_eeg)s
-    subject : int
-        Subject number.
+    %(bids_subject)s
     """
     data_eeg = ensure_path(data_eeg, must_exist=True)
     for file in data_eeg.glob("*.mff"):

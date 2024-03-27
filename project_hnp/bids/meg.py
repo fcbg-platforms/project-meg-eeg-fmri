@@ -28,12 +28,17 @@ def write_meg_datasets(
     root: Path | str,
     root_raw: Path | str,
     subject: int,
-    data_meg: Path,
+    data_meg: Path | str,
 ) -> None:
     """Write MEG datasets.
 
+    The MEG dataset should contain the recordings in .fif format.
+
     Parameters
     ----------
+    %(bids_root)s
+    %(bids_root_raw)s
+    %(bids_subject)s
     %(data_meg)s
     """
     root = ensure_path(root, must_exist=True)

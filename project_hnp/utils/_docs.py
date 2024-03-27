@@ -18,26 +18,30 @@ docdict: dict[str, str] = dict()
 
 # -- A ---------------------------------------------------------------------------------
 # -- B ---------------------------------------------------------------------------------
-docdict["bids_path_root_raw_sub"] = """
-bids_path : BIDSPath
-    A :class:`~mne_bids.BIDSPath` with at least root and subject set (raw data)."""
+docdict["bids_root"] = """
+root : Path | str
+    Path to the root of the BIDS dataset."""
 
-docdict["bids_path_root_sub"] = """
-bids_path : BIDSPath
-    A :class:`~mne_bids.BIDSPath` with at least root and subject set."""
+docdict["bids_root_raw"] = """
+root_raw : Path | str
+    Path to the root of the BIDS dataset containing raw/unconverted files."""
+
+docdict["bids_subject"] = """
+subject : int
+    Subject number."""
 
 # -- C ---------------------------------------------------------------------------------
 # -- D ---------------------------------------------------------------------------------
 docdict["data_eeg"] = """
-data_eeg : Path
+data_eeg : Path | str
     Path to the EEG dataset."""
 
 docdict["data_meg"] = """
-data_meg : Path
+data_meg : Path | str
     Path to the MEG dataset."""
 
 docdict["data_mri"] = """
-data_mri : Path
+data_mri : Path | str
     Path to the MRI dataset."""
 
 # -- E ---------------------------------------------------------------------------------

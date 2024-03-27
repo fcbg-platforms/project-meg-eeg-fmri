@@ -20,12 +20,17 @@ def write_mri_datasets(
     root: Path | str,
     root_raw: Path | str,
     subject: int,
-    data_mri: Path,
+    data_mri: Path | str,
 ) -> None:
     """Write MRI datasets.
 
+    The MRI dataset should contain 2 folders: ``DICOM`` and ``NIfTI``.
+
     Parameters
     ----------
+    %(bids_root)s
+    %(bids_root_raw)s
+    %(bids_subject)s
     %(data_mri)s
     """
     root = ensure_path(root, must_exist=True)
