@@ -11,7 +11,12 @@ from ..krios import read_EGI_ch_names, read_krios_montage
 from ..utils._checks import ensure_path
 from ..utils._docs import fill_doc
 from ._constants import EGI_CH_TO_DROP
-from ._utils import ensure_subject_int, validate_data_EEG
+from ._utils import (
+    ensure_subject_int,
+    fetch_participant_information,
+    validate_data_EEG,
+    write_participant_information,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -62,6 +67,8 @@ def write_eeg_datasets(
             "Expected only one Krios digitization csv file, got "
             f"{[file.name for file in files]}."
         )
+    # look for existing participant information
+    participant_info = fetch_participant_information(bids_path)
     # populate the BIDS dataset
     for file in data_eeg.glob("*.mff"):
         task = file.stem.split("_")[1].split("-")[1]
@@ -82,6 +89,8 @@ def write_eeg_datasets(
             shutil.copy2(file, bids_path_raw.fpath.with_suffix(".mff"))
         elif file.is_dir():
             shutil.copytree(file, bids_path_raw.fpath.with_suffix(".mff"))
+    # add back participant information if needed
+    write_participant_information(bids_path, participant_info)
 
 
 def _process_EGI_raw(raw: BaseRaw, montage: DigMontage) -> None:

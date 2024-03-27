@@ -2,12 +2,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from mne_bids.read import _from_tsv
+
 from ..utils._checks import ensure_int
 from ..utils._docs import fill_doc
 from ._constants import EXPECTED_EEG, EXPECTED_MEG, EXPECTED_MRI, OPTIONAL_MEG
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from mne_bids import BIDSPath
 
 
 @fill_doc
@@ -104,3 +108,38 @@ def validate_data_MRI(data_mri: Path) -> None:
     folders = [folder.name for folder in data_mri.iterdir() if folder.is_dir()]
     if set(folders) != EXPECTED_MRI:
         raise ValueError(f"Expected MRI folders {EXPECTED_MRI}, got {set(folders)}.")
+
+
+def fetch_participant_information(bids_path: BIDSPath) -> dict[str, str] | None:
+    """Fetch participant information from the BIDS dataset.
+
+    Parameters
+    ----------
+    bids_path : BIDSPath
+        The BIDS path to the dataset, including root and the subject number.
+
+    Returns
+    -------
+    dict | None
+        The participant information if available, else None.
+    """
+    participants = _from_tsv(bids_path.root / "participants.tsv")
+    if f"sub-{bids_path.subject}" in participants["participant_id"]:
+        idx = participants["participant_id"].index(f"sub-{bids_path.subject}")
+        return {key: elt[idx] for key, elt in participants.items()}
+    return None
+
+
+def write_participant_information(
+    bids_path: BIDSPath, participant_info: dict[str, str]
+) -> None:
+    """Write participant information to the BIDS dataset.
+
+    Parameters
+    ----------
+    bids_path : BIDSPath
+        The BIDS path to the dataset, including root and the subject number.
+    participant_info : dict
+        Dictionary containing the participant information.
+    """
+    pass

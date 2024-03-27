@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 from importlib.resources import files
-from typing import TYPE_CHECKING
+from pathlib import Path
 from warnings import warn
 
 from mne.io import read_raw_fif
@@ -18,9 +18,6 @@ from mne_bids.utils import _write_json
 from ..utils._checks import ensure_path
 from ..utils._docs import fill_doc
 from ._utils import ensure_subject_int, validate_data_MEG
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 @fill_doc

@@ -9,7 +9,12 @@ from mne_bids import BIDSPath, write_anat
 from ..utils._checks import ensure_path
 from ..utils._docs import fill_doc
 from ._constants import EXPECTED_fMRI_T1
-from ._utils import ensure_subject_int, validate_data_MRI
+from ._utils import (
+    ensure_subject_int,
+    fetch_participant_information,
+    validate_data_MRI,
+    write_participant_information,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -50,9 +55,13 @@ def write_mri_datasets(
         task=None,
     )
     os.makedirs(bids_path_raw.fpath.parent, exist_ok=True)
+    # look for existing participant information
+    participant_info = fetch_participant_information(bids_path)
     # find anatomical MRI and write it to BIDS dataset
     for file in (data_mri / "NIfTI").glob("*.nii"):
         if EXPECTED_fMRI_T1[0] in file.name.lower():
             write_anat(file, bids_path, overwrite=True)
             shutil.copy2(file, bids_path_raw.fpath.with_suffix("".join(file.suffixes)))
             break
+    # add back participant information if needed
+    write_participant_information(bids_path, participant_info)
