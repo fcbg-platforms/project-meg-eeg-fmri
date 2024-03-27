@@ -2,9 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from mne_bids import BIDSPath
-
-from ..utils._checks import ensure_int, ensure_path
 from .eeg import write_eeg_datasets
 from .meg import write_meg_datasets
 from .mri import write_mri_datasets
@@ -38,19 +35,7 @@ def bidsification(
     data_mri : Path | str
         Path to the MRI dataset.
     """
-    root = ensure_path(root, must_exist=True)
-    root_raw = ensure_path(root_raw, must_exist=True)
-    subject = ensure_int(subject, "subject")
-    if subject <= 0:
-        raise ValueError(
-            f"Argument 'subject' must be a positive integer, got {subject}."
-        )
-    data_eeg = ensure_path(data_eeg, must_exist=True)
-    data_meg = ensure_path(data_meg, must_exist=True)
-    data_mri = ensure_path(data_mri, must_exist=True)
-    bids_path = BIDSPath(root=root, subject=str(subject).zfill(2))
-    bids_path_raw = BIDSPath(root=root_raw, subject=str(subject).zfill(2))
-    write_eeg_datasets(bids_path, bids_path_raw, data_eeg)
-    write_mri_datasets(bids_path, bids_path_raw, data_mri)
+    write_eeg_datasets(root, root_raw, subject, data_eeg)
+    write_mri_datasets(root, root_raw, subject, data_mri)
     # MEG last to overwrite participant info
-    write_meg_datasets(bids_path, bids_path_raw, data_meg)
+    write_meg_datasets(root, root_raw, subject, data_meg)

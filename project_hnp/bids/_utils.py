@@ -2,26 +2,26 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ..utils._checks import ensure_int, ensure_path
 from ..utils._docs import fill_doc
 from ._constants import EXPECTED_EEG, EXPECTED_MEG, EXPECTED_MRI, OPTIONAL_MEG
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from mne_bids import BIDSPath
 
-
-def validate_bids_paths(bids_path: BIDSPath, bids_path_raw: BIDSPath):
-    """Validate the provided BIDS path."""
-    assert bids_path.root is not None
-    assert bids_path.subject is not None
-    assert bids_path_raw.root is not None
-    assert bids_path_raw.subject is not None
-    assert bids_path.subject == bids_path_raw.subject
+def ensure_subject_int(subject: int) -> int:
+    """Ensure that the subject number is a positive integer."""
+    subject = ensure_int(subject, "subject")
+    if subject <= 0:
+        raise ValueError(
+            f"Argument 'subject' must be a positive integer, got {subject}."
+        )
+    return subject
 
 
 @fill_doc
-def validate_data_MEG(data_meg: Path, subject: int) -> None:
+def validate_data_MEG(data_meg: Path | str, subject: int) -> None:
     """Validate a folder containing MEG data.
 
     Parameters
@@ -30,6 +30,7 @@ def validate_data_MEG(data_meg: Path, subject: int) -> None:
     subject : int
         Subject number.
     """
+    data_meg = ensure_path(data_meg, must_exist=True)
     for file in data_meg.glob("*.fif"):
         finfo = file.stem.split("_")
         assert finfo[0] == "sub"  # sanity-check
@@ -46,7 +47,7 @@ def validate_data_MEG(data_meg: Path, subject: int) -> None:
 
 
 @fill_doc
-def validate_data_EEG(data_eeg: Path, subject: int) -> None:
+def validate_data_EEG(data_eeg: Path | str, subject: int) -> None:
     """Validate a folder containing EEG data.
 
     Parameters
@@ -55,6 +56,7 @@ def validate_data_EEG(data_eeg: Path, subject: int) -> None:
     subject : int
         Subject number.
     """
+    data_eeg = ensure_path(data_eeg, must_exist=True)
     for file in data_eeg.glob("*.mff"):
         finfo = file.stem.split("_")
         assert finfo[0].startswith("sub")  # sanity-check
@@ -83,13 +85,14 @@ def validate_data_EEG(data_eeg: Path, subject: int) -> None:
 
 
 @fill_doc
-def validate_data_MRI(data_mri: Path) -> None:
+def validate_data_MRI(data_mri: Path | str) -> None:
     """Validate a folder containing MRI data.
 
     Parameters
     ----------
     %(data_mri)s
     """
+    data_mri = ensure_path(data_mri, must_exist=True)
     folders = [folder.name for folder in data_mri.iterdir() if folder.is_dir()]
     if set(folders) != EXPECTED_MRI:
         raise ValueError(f"Expected MRI folders {EXPECTED_MRI}, got {set(folders)}.")

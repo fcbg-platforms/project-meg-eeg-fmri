@@ -5,40 +5,42 @@ import shutil
 from typing import TYPE_CHECKING
 
 from mne.io import read_raw_egi
-from mne_bids import write_raw_bids
+from mne_bids import BIDSPath, write_raw_bids
 
 from ..krios import read_EGI_ch_names, read_krios_montage
+from ..utils._checks import ensure_path
 from ..utils._docs import fill_doc
 from ._constants import EGI_CH_TO_DROP
-from ._utils import validate_bids_paths, validate_data_EEG
+from ._utils import ensure_subject_int, validate_data_EEG
 
 if TYPE_CHECKING:
     from pathlib import Path
 
     from mne.channels import DigMontage
     from mne.io import BaseRaw
-    from mne_bids import BIDSPath
 
 
 @fill_doc
 def write_eeg_datasets(
-    bids_path: BIDSPath,
-    bids_path_raw: BIDSPath,
+    root: Path | str,
+    root_raw: Path | str,
+    subject: int,
     data_eeg: Path,
 ) -> None:
     """Write EEG datasets.
 
     Parameters
     ----------
-    %(bids_path_root_sub)s
-    %(bids_path_root_raw_sub)s
     %(data_eeg)s
     """
-    validate_bids_paths(bids_path, bids_path_raw)
+    root = ensure_path(root, must_exist=True)
+    root_raw = ensure_path(root_raw, must_exist=True)
+    subject = ensure_subject_int(subject)
+    bids_path = BIDSPath(root=root, subject=str(subject).zfill(2), datatype="eeg")
+    bids_path_raw = BIDSPath(
+        root=root_raw, subject=str(subject).zfill(2), datatype="eeg", suffix="eeg"
+    )
     validate_data_EEG(data_eeg, int(bids_path.subject))
-    # update BIDSPath and create folders if necessary
-    bids_path.update(datatype="eeg")
-    bids_path_raw.update(datatype="eeg", suffix="eeg")
     os.makedirs(bids_path_raw.fpath.parent, exist_ok=True)
     # look for montage
     files = [file for file in data_eeg.glob("*.csv")]
