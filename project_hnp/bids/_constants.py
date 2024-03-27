@@ -4,6 +4,7 @@ OPTIONAL_MEG: set[str] = {"resteeg"}
 EXPECTED_MRI: set[str] = {"DICOM", "NIfTI"}
 EXPECTED_fMRI_NIFTI: set[str] = {"feet", "hand", "face", "sparseAuditory"}
 EXPECTED_fMRI_T1: list[str] = ["t1_mprage"]
+MAPPING_fMRI = {"feet": "feet", "hand": "fing", "face": "vis", "sparseAuditory": "aud"}
 # fmt: off
 EGI_CH_TO_DROP: list[str] = [
     "31", "241", "242", "244", "245", "246", "247", "248", "249", "250", "251", "F9",

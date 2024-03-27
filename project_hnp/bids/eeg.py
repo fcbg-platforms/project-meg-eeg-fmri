@@ -85,7 +85,9 @@ def write_eeg_datasets(
         if file.is_file():
             shutil.copy2(file, bids_path_raw.fpath.with_suffix(".mff"))
         elif file.is_dir():
-            shutil.copytree(file, bids_path_raw.fpath.with_suffix(".mff"))
+            shutil.copytree(
+                file, bids_path_raw.fpath.with_suffix(".mff"), dirs_exist_ok=True
+            )
     # add back participant information if needed
     write_participant_information(bids_path, participant_info)
 
