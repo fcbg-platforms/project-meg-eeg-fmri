@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from mne_bids.read import _from_tsv
+from mne_bids.write import _write_tsv
 
 from ..utils._checks import ensure_int
 from ..utils._docs import fill_doc
@@ -131,7 +132,7 @@ def fetch_participant_information(bids_path: BIDSPath) -> dict[str, str] | None:
 
 
 def write_participant_information(
-    bids_path: BIDSPath, participant_info: dict[str, str]
+    bids_path: BIDSPath, participant_info: dict[str, str] | None
 ) -> None:
     """Write participant information to the BIDS dataset.
 
@@ -139,7 +140,17 @@ def write_participant_information(
     ----------
     bids_path : BIDSPath
         The BIDS path to the dataset, including root and the subject number.
-    participant_info : dict
+    participant_info : dict | None
         Dictionary containing the participant information.
     """
-    pass
+    if participant_info is None:
+        return  # nothing to do
+    fname = bids_path.root / "participants.tsv"
+    orig_data = _from_tsv(fname)
+    assert f"sub-{bids_path.subject}" in orig_data["participant_id"]  # sanity-check
+    idx = orig_data["participant_id"].index(f"sub-{bids_path.subject}")
+    for key in orig_data:
+        if key == "participant_id":
+            continue
+        orig_data[key][idx] = participant_info[key]
+    _write_tsv(fname, orig_data, True)

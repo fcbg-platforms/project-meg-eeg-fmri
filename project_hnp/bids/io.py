@@ -33,5 +33,4 @@ def bidsification(
     """
     write_eeg_datasets(root, root_raw, subject, data_eeg)
     write_mri_datasets(root, root_raw, subject, data_mri)
-    # MEG last to overwrite participant info
     write_meg_datasets(root, root_raw, subject, data_meg)
