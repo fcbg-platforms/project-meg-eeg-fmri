@@ -36,6 +36,9 @@ def write_mri_datasets(
     root = ensure_path(root, must_exist=True)
     root_raw = ensure_path(root_raw, must_exist=True)
     subject = ensure_subject_int(subject)
+    data_mri = ensure_path(data_mri, must_exist=True)
+    validate_data_MRI(data_mri)
+    # create BIDS Path and folders
     bids_path = BIDSPath(
         root=root, subject=str(subject).zfill(2), datatype="anat", task=None
     )
@@ -46,10 +49,8 @@ def write_mri_datasets(
         suffix="T1w",
         task=None,
     )
-    validate_data_MRI(data_mri)
-    # find anatomical MRI and write it to BIDS dataset
-    assert len(EXPECTED_fMRI_T1) == 1  # sanity-check
     os.makedirs(bids_path_raw.fpath.parent, exist_ok=True)
+    # find anatomical MRI and write it to BIDS dataset
     for file in (data_mri / "NIfTI").glob("*.nii"):
         if EXPECTED_fMRI_T1[0] in file.name.lower():
             write_anat(file, bids_path, overwrite=True)

@@ -44,6 +44,9 @@ def write_meg_datasets(
     root = ensure_path(root, must_exist=True)
     root_raw = ensure_path(root_raw, must_exist=True)
     subject = ensure_subject_int(subject)
+    data_meg = ensure_path(data_meg, must_exist=True)
+    validate_data_MEG(data_meg, subject)
+    # create BIDS Path and folders
     bids_path = BIDSPath(root=root, subject=str(subject).zfill(2), datatype="meg")
     bids_path_raw = BIDSPath(
         root=root_raw,
@@ -52,7 +55,6 @@ def write_meg_datasets(
         suffix="meg",
         extension=".fif",
     )
-    validate_data_MEG(data_meg, int(bids_path.subject))
     os.makedirs(bids_path_raw.fpath.parent, exist_ok=True)
     # look for empty-room recording
     for file in data_meg.glob("*.fif"):

@@ -42,11 +42,13 @@ def write_eeg_datasets(
     root = ensure_path(root, must_exist=True)
     root_raw = ensure_path(root_raw, must_exist=True)
     subject = ensure_subject_int(subject)
+    data_eeg = ensure_path(data_eeg, must_exist=True)
+    validate_data_EEG(data_eeg, subject)
+    # create BIDS Path and folders
     bids_path = BIDSPath(root=root, subject=str(subject).zfill(2), datatype="eeg")
     bids_path_raw = BIDSPath(
         root=root_raw, subject=str(subject).zfill(2), datatype="eeg", suffix="eeg"
     )
-    validate_data_EEG(data_eeg, int(bids_path.subject))
     os.makedirs(bids_path_raw.fpath.parent, exist_ok=True)
     # look for montage
     files = [file for file in data_eeg.glob("*.csv")]

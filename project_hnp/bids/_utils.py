@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ..utils._checks import ensure_int, ensure_path
+from ..utils._checks import ensure_int
 from ..utils._docs import fill_doc
 from ._constants import EXPECTED_EEG, EXPECTED_MEG, EXPECTED_MRI, OPTIONAL_MEG
 
@@ -31,15 +31,15 @@ def ensure_subject_int(subject: int) -> int:
 
 
 @fill_doc
-def validate_data_MEG(data_meg: Path | str, subject: int) -> None:
+def validate_data_MEG(data_meg: Path, subject: int) -> None:
     """Validate a folder containing MEG data.
 
     Parameters
     ----------
-    %(data_meg)s
+    data_meg : Path
+        Path to the MEG dataset.
     %(bids_subject)s
     """
-    data_meg = ensure_path(data_meg, must_exist=True)
     for file in data_meg.glob("*.fif"):
         finfo = file.stem.split("_")
         assert finfo[0] == "sub"  # sanity-check
@@ -56,15 +56,15 @@ def validate_data_MEG(data_meg: Path | str, subject: int) -> None:
 
 
 @fill_doc
-def validate_data_EEG(data_eeg: Path | str, subject: int) -> None:
+def validate_data_EEG(data_eeg: Path, subject: int) -> None:
     """Validate a folder containing EEG data.
 
     Parameters
     ----------
-    %(data_eeg)s
+    data_eeg : Path
+        Path to the EEG dataset.
     %(bids_subject)s
     """
-    data_eeg = ensure_path(data_eeg, must_exist=True)
     for file in data_eeg.glob("*.mff"):
         finfo = file.stem.split("_")
         assert finfo[0].startswith("sub")  # sanity-check
@@ -93,14 +93,14 @@ def validate_data_EEG(data_eeg: Path | str, subject: int) -> None:
 
 
 @fill_doc
-def validate_data_MRI(data_mri: Path | str) -> None:
+def validate_data_MRI(data_mri: Path) -> None:
     """Validate a folder containing MRI data.
 
     Parameters
     ----------
-    %(data_mri)s
+    data_mri : Path
+        Path to the MRI dataset.
     """
-    data_mri = ensure_path(data_mri, must_exist=True)
     folders = [folder.name for folder in data_mri.iterdir() if folder.is_dir()]
     if set(folders) != EXPECTED_MRI:
         raise ValueError(f"Expected MRI folders {EXPECTED_MRI}, got {set(folders)}.")
