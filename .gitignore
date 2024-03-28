@@ -124,3 +124,9 @@ dmypy.json
 
 # VSCode
 .vscode
+
+# E-Prime
+tasks/MEEG/*.xml
+tasks/MEEG/*.xsl
+tasks/MEEG/*.wndpos
+tasks/MEEG/*.ebs3
