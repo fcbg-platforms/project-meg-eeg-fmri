@@ -9,7 +9,6 @@ from mne_bids import BIDSPath, write_raw_bids
 from ..krios import read_EGI_ch_names, read_krios_montage
 from ..utils._checks import ensure_path, ensure_subject_int
 from ..utils._docs import fill_doc
-from ._constants import EGI_CH_TO_DROP
 from ._utils import (
     fetch_participant_information,
     validate_data_EEG,
@@ -102,5 +101,4 @@ def _process_EGI_raw(raw: BaseRaw, montage: DigMontage) -> None:
         {ch1: ch2 for ch1, ch2 in zip(ch_names2rename, ch_names, strict=True)}
     )
     raw.set_montage(montage)
-    raw.drop_channels(EGI_CH_TO_DROP)
     # TODO: Handle stim channels
