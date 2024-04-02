@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import shutil
+import warnings
 from typing import TYPE_CHECKING
 
 from mne.io import read_raw_egi
@@ -72,13 +73,19 @@ def write_eeg_datasets(
         bids_path_raw.update(task=task)
         raw = read_raw_egi(file)
         _process_EGI_raw(raw, montage)
-        write_raw_bids(
-            raw,
-            bids_path,
-            events=None,  # TODO: extract and add events
-            event_id=None,  # TODO: validate event IDs based on constants
-            overwrite=True,
-        )
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message="Converting data files to BrainVision format",
+                category=RuntimeWarning,
+            )
+            write_raw_bids(
+                raw,
+                bids_path,
+                events=None,  # TODO: extract and add events
+                event_id=None,  # TODO: validate event IDs based on constants
+                overwrite=True,
+            )
         # copy original to bids_path_raw location, .mff are not handled equally between
         # win, linux and macOS
         if file.is_file():
