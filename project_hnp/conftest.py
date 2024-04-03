@@ -4,9 +4,10 @@ import os
 from importlib.resources import files
 from pathlib import Path
 from typing import TYPE_CHECKING
-from warnings import warn
 
 import pytest
+
+from .utils.logs import logger, warn
 
 if TYPE_CHECKING:
     from pytest import Config
@@ -22,20 +23,18 @@ def pytest_configure(config: Config) -> None:
         if warning_line and not warning_line.startswith("#"):
             config.addinivalue_line("filterwarnings", warning_line)
 
+    # setup logging
+    logger.propagate = True
+
+    # look for testing dataset
     testing_dataset = os.getenv("PROJECT_MEG_EEG_fMRI_TESTING_DATASET")
     if testing_dataset is None:
         warn(
             "Missing testing dataset environment variable "
-            "'PROJECT_MEG_EEG_fMRI_TESTING_DATASET'.",
-            RuntimeWarning,
-            stacklevel=1,
+            "'PROJECT_MEG_EEG_fMRI_TESTING_DATASET'."
         )
     elif not Path(testing_dataset).exists():
-        warn(
-            f"Testing dataset '{testing_dataset}' does not exist.",
-            RuntimeWarning,
-            stacklevel=1,
-        )
+        warn(f"Testing dataset '{testing_dataset}' does not exist.")
 
 
 @pytest.fixture(

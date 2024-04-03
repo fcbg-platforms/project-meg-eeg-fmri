@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from importlib.resources import files
 from pathlib import Path
-from warnings import warn
 
 from mne.io import read_raw_fif
 from mne_bids import (
@@ -16,6 +15,7 @@ from mne_bids.utils import _write_json
 
 from ..utils._checks import ensure_path, ensure_subject_int
 from ..utils._docs import fill_doc
+from ..utils.logs import warn
 from ._utils import validate_data_MEG
 
 
@@ -58,11 +58,7 @@ def write_meg_datasets(
             empty_room = read_raw_fif(file)
             break
     else:
-        warn(
-            RuntimeWarning,
-            f"The empty-room recording is missing in '{str(data_meg)}'.",
-            stacklevel=2,
-        )
+        warn(f"The empty-room recording is missing in '{str(data_meg)}'.")
     # save BIDS and raw dataset
     _write_meg_calibration_crosstalk(bids_path)
     for file in data_meg.glob("*.fif"):

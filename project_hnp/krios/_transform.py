@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from warnings import warn
 
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 from scipy.spatial import distance_matrix
+
+from ..utils.logs import warn
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -94,8 +95,6 @@ def reorder_electrodes(
         elc_reordered[idx, :] = template[idx, :]
         warn(
             "Some electrodes are missing in the scanned data and have been filled from "
-            f"the template. Missing electrodes idx: {idx}.",
-            RuntimeWarning,
-            stacklevel=3,
+            f"the template. Missing electrodes idx: {idx}."
         )
     return elc_reordered
