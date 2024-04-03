@@ -45,6 +45,7 @@ def compute_heas_pos(root: Path | str, derivative: Path | str, subject: int) -> 
         chpi_locs = compute_chpi_locs(raw.info, chpi_amplitudes)
         head_pos = compute_head_pos(raw.info, chpi_locs)
         # save output to disk
+        bids_path_derivative.update(task=task)
         fname = (
             bids_path_derivative.directory
             / f"{bids_path_derivative.basename}_head_pos.pos"
