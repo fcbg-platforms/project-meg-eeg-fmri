@@ -81,6 +81,17 @@ def write_eeg_datasets(
                 message="Converting data files to BrainVision format",
                 category=RuntimeWarning,
             )
+            warnings.filterwarnings(
+                "ignore",
+                message="Encountered unsupported non-voltage units",
+                category=UserWarning,
+            )
+            if task == "rest":
+                warnings.filterwarnings(
+                    "ignore",
+                    message="No events found or provided.",
+                    category=RuntimeWarning,
+                )
             write_raw_bids(
                 raw,
                 bids_path,

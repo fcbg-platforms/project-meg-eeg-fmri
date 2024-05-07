@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import warnings
 from importlib.resources import files
 from pathlib import Path
 
@@ -71,14 +72,21 @@ def write_meg_datasets(
         bids_path.update(task=task)
         raw = read_raw_fif(file)
         events, event_id = find_events(raw, task)
-        write_raw_bids(
-            raw,
-            bids_path,
-            events=events,
-            event_id=event_id,
-            empty_room=empty_room,
-            overwrite=True,
-        )
+        with warnings.catch_warnings():
+            if task in ("rest", "resteeg"):
+                warnings.filterwarnings(
+                    "ignore",
+                    message="No events found or provided.",
+                    category=RuntimeWarning,
+                )
+            write_raw_bids(
+                raw,
+                bids_path,
+                events=events,
+                event_id=event_id,
+                empty_room=empty_room,
+                overwrite=True,
+            )
         sidecar_fname = bids_path.copy().update(
             suffix=bids_path.datatype, extension=".json"
         )

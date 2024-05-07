@@ -152,6 +152,8 @@ def find_events(
         return None, None
     raw = raw.copy().pick("stim").load_data()
     triggers = TRIGGERS.get(task, None)
+    if len(triggers) == 0:
+        return None, None
     if triggers is None:
         warn(f"Task '{task}' is not recognized.")
         return None, None
@@ -162,6 +164,6 @@ def find_events(
     events = find_events_mne(raw, stim_channel=stim_channel)
     event_id = triggers["events"]
     if sorted(np.unique(events[:, 2])) != sorted(event_id.values()):
-        warn(f"Event IDsin the recording do not match for task '{task}'.")
+        warn(f"Event IDs in the recording do not match for task '{task}'.")
         return None, None
     return events, event_id

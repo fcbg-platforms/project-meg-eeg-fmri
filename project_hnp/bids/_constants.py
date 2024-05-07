@@ -36,4 +36,7 @@ TRIGGERS: dict[str, dict[str, dict[str, int] | str]] = {
     "aud": TRIGGER_AUD,
     "fing": TRIGGER_FING,
     "feet": TRIGGER_FEET,
+    "rest": dict(),
+    "resteeg": dict(),
+    "noise": dict(),
 }
