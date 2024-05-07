@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from mne import find_events as find_events_mne
+from mne.io.egi.egimff import RawMff
 from mne_bids.read import _from_tsv
 from mne_bids.write import _write_tsv
 
@@ -108,7 +109,10 @@ def fetch_participant_information(bids_path: BIDSPath) -> dict[str, str] | None:
     dict | None
         The participant information if available, else None.
     """
-    participants = _from_tsv(bids_path.root / "participants.tsv")
+    fname = bids_path.root / "participants.tsv"
+    if not fname.exists():
+        return None
+    participants = _from_tsv(fname)
     if f"sub-{bids_path.subject}" in participants["participant_id"]:
         idx = participants["participant_id"].index(f"sub-{bids_path.subject}")
         return {key: elt[idx] for key, elt in participants.items()}
@@ -144,12 +148,18 @@ def find_events(
     raw: BaseRaw, task: str
 ) -> tuple[None, None] | tuple[NDArray[np.int64], dict[str, int]]:
     """Find events and event IDs."""
+    if "stim" not in raw:
+        return None, None
     raw = raw.copy().pick("stim").load_data()
     triggers = TRIGGERS.get(task, None)
     if triggers is None:
         warn(f"Task '{task}' is not recognized.")
         return None, None
-    events = find_events_mne(raw, stim_channel=triggers["meg_stim_channel"])
+    if isinstance(raw, RawMff):
+        stim_channel = triggers["egi_stim_channel"]
+    else:
+        stim_channel = triggers["meg_stim_channel"]
+    events = find_events_mne(raw, stim_channel=stim_channel)
     event_id = triggers["events"]
     if sorted(np.unique(events[:, 2])) != sorted(event_id.values()):
         warn(f"Event IDsin the recording do not match for task '{task}'.")
