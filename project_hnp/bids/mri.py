@@ -4,6 +4,8 @@ import shutil
 from typing import TYPE_CHECKING
 
 from mne_bids import BIDSPath, write_anat
+from mne_bids.tsv_handler import _from_tsv
+from mne_bids.utils import _write_tsv
 
 from ..utils._checks import ensure_path, ensure_subject_int
 from ..utils._docs import fill_doc
@@ -126,7 +128,6 @@ def _write_functional(
         bids_path.update(task=task)
         bids_path_raw.update(task=task)
         for path in (bids_path, bids_path_raw):
-            path.update(suffix="bold")
             shutil.copy2(
                 file,
                 (path.directory / path.basename).with_suffix("".join(file.suffixes)),
@@ -135,3 +136,12 @@ def _write_functional(
                 file.with_suffix(".json"),
                 (path.directory / path.basename).with_suffix(".json"),
             )
+        # update scans TSV
+        scans_tsv = bids_path.directory.parent / f"sub-{bids_path.subject}_scans.tsv"
+        scans_data = _from_tsv(scans_tsv)
+        fname = (
+            f"{bids_path.directory.name}/{bids_path.basename}{''.join(file.suffixes)}"
+        )
+        scans_data["filename"].append(fname)
+        scans_data["acq_time"].append("n/a")
+        _write_tsv(scans_tsv, scans_data, overwrite=True)
