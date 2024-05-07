@@ -2,16 +2,21 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import numpy as np
+from mne import find_events as find_events_mne
 from mne_bids.read import _from_tsv
 from mne_bids.write import _write_tsv
 
 from ..utils._docs import fill_doc
-from ._constants import EXPECTED_EEG, EXPECTED_MEG, EXPECTED_MRI, OPTIONAL_MEG
+from ..utils.logs import warn
+from ._constants import EXPECTED_EEG, EXPECTED_MEG, EXPECTED_MRI, OPTIONAL_MEG, TRIGGERS
 
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from mne.io import BaseRaw
     from mne_bids import BIDSPath
+    from numpy.typing import NDArray
 
 
 @fill_doc
@@ -133,3 +138,20 @@ def write_participant_information(
             continue
         orig_data[key][idx] = participant_info[key]
     _write_tsv(fname, orig_data, True)
+
+
+def find_events(
+    raw: BaseRaw, task: str
+) -> tuple[None, None] | tuple[NDArray[np.int64], dict[str, int]]:
+    """Find events and event IDs."""
+    raw = raw.copy().pick("stim").load_data()
+    triggers = TRIGGERS.get(task, None)
+    if triggers is None:
+        warn(f"Task '{task}' is not recognized.")
+        return None, None
+    events = find_events_mne(raw, stim_channel=triggers["meg_stim_channel"])
+    event_id = triggers["events"]
+    if sorted(np.unique(events[:, 2])) != sorted(event_id.values()):
+        warn(f"Event IDsin the recording do not match for task '{task}'.")
+        return None, None
+    return events, event_id

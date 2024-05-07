@@ -16,7 +16,7 @@ from mne_bids.utils import _write_json
 from ..utils._checks import ensure_path, ensure_subject_int
 from ..utils._docs import fill_doc
 from ..utils.logs import warn
-from ._utils import validate_data_MEG
+from ._utils import find_events, validate_data_MEG
 
 
 @fill_doc
@@ -70,11 +70,12 @@ def write_meg_datasets(
             continue
         bids_path.update(task=task)
         raw = read_raw_fif(file)
+        events, event_id = find_events(raw, task)
         write_raw_bids(
             raw,
             bids_path,
-            events=None,  # TODO: extract and add events
-            event_id=None,  # TODO: validate event IDs based on constants
+            events=events,
+            event_id=event_id,
             empty_room=empty_room,
             overwrite=True,
         )

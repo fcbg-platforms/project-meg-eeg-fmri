@@ -12,6 +12,7 @@ from ..utils._checks import ensure_path, ensure_subject_int
 from ..utils._docs import fill_doc
 from ._utils import (
     fetch_participant_information,
+    find_events,
     validate_data_EEG,
     write_participant_information,
 )
@@ -73,6 +74,7 @@ def write_eeg_datasets(
         bids_path_raw.update(task=task)
         raw = read_raw_egi(file)
         _process_EGI_raw(raw, montage)
+        events, event_id = find_events(raw, task)
         with warnings.catch_warnings():
             warnings.filterwarnings(
                 "ignore",
@@ -82,8 +84,8 @@ def write_eeg_datasets(
             write_raw_bids(
                 raw,
                 bids_path,
-                events=None,  # TODO: extract and add events
-                event_id=None,  # TODO: validate event IDs based on constants
+                events=events,
+                event_id=event_id,
                 overwrite=True,
             )
         # copy original to bids_path_raw location, .mff are not handled equally between
@@ -108,4 +110,3 @@ def _process_EGI_raw(raw: BaseRaw, montage: DigMontage) -> None:
         {ch1: ch2 for ch1, ch2 in zip(ch_names2rename, ch_names, strict=True)}
     )
     raw.set_montage(montage)
-    # TODO: Handle stim channels
