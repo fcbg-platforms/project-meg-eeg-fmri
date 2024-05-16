@@ -19,8 +19,8 @@ classifiers = [
 ]
 dependencies = [
   'defusedxml',
-  'mne',
   'mne-bids',
+  'mne[full]',
   'nibabel',
   'numpy>=1.21',
   'packaging',
