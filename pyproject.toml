@@ -27,6 +27,7 @@ dependencies = [
   'psutil',
   'pybv',
   'pycpd',
+  'pymeshfix',
   'scipy',
 ]
 description = 'Comparison of localisation in fMRI/MEG/EEG.'
