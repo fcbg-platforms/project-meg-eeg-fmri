@@ -39,10 +39,10 @@ def read_krios(fname: Path | str) -> tuple[NDArray[np.float64], NDArray[np.float
     Returns
     -------
     elc : array of shape (n_electrodes, 3)
-        (x, y, z) coordinates of the EEG electrodes in the head coordinate system.
+        (x, y, z) coordinates of the EEG electrodes in cartool's coordinate system.
     fid : array of shape (3, 3)
-        (x, y, z) coordinates of the fiducials in the head coordinate system, ordered as
-        RPA, LPA, NZ.
+        (x, y, z) coordinates of the fiducials in cartool's coordinate system, ordered
+        as RPA, LPA, NZ.
     """
     fname = ensure_path(fname, must_exist=True)
     df = np.loadtxt(
@@ -78,7 +78,11 @@ def read_krios(fname: Path | str) -> tuple[NDArray[np.float64], NDArray[np.float
     elc_template = np.loadtxt(
         _TEMPLATE_FNAME, skiprows=1, usecols=(0, 1, 2), max_rows=257, dtype=np.float64
     )
-    # co-register with template
+    # co-register with template, which (1) approximate cartool's coordinate system from
+    # the template, (2) enables re-ordering from the template order and (3) enables
+    # adding missing electrodes from the template.
+    # The same transformation is applied to fiducials, which are used by MNE to
+    # construct a head coordinate system.
     # RigidRegistration(...).register() returns 2 elements:
     # - TY : array of shape (n_points, 3), the registered and transformed source points
     # - registration parameters : tuple of 3 elements
@@ -128,13 +132,14 @@ def read_krios_montage(fname: Path | str) -> DigMontage:
             f"number of channel names ({ch_names.size}) in the template."
         )
     ch_pos = dict(zip(ch_names, elc, strict=True))
-    return make_dig_montage(
+    montage = make_dig_montage(
         ch_pos=ch_pos,
         nasion=fid[2, :],
         lpa=fid[1, :],
         rpa=fid[0, :],
-        coord_frame="head",
+        coord_frame="unknown",
     )
+    return _get_montage_in_head(montage)
 
 
 def read_EGI_ch_names() -> NDArray:

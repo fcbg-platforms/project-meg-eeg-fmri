@@ -21,9 +21,6 @@ if TYPE_CHECKING:
 def test_read_krios(krios_file: Path):
     """Test that read points are within a sphere defined by the fiducials."""
     elc, fid = read_krios(krios_file)
-    assert np.allclose(fid[0, 1:], np.zeros(2))  # RPA
-    assert np.allclose(fid[1, 1:], np.zeros(2))  # LPA
-    assert np.allclose(fid[2, np.array([0, 2], dtype=np.int8)], np.zeros(2))  # NZ
     # check that all electrodes are within a sphere defined by the fiducials
     radius = np.average(np.linalg.norm(fid, axis=1)) * 2
     distances = np.linalg.norm(elc, axis=1)
@@ -69,3 +66,7 @@ def test_read_krios_montage(krios_file: Path):
     elc = np.array([array for array in montage.get_positions()["ch_pos"].values()])
     distances = np.linalg.norm(elc[:, :2], axis=1)
     assert np.all(distances < radius)
+    # check that we are in head coordinate
+    assert np.allclose(montage.dig[0]["r"][1:], np.zeros(2))  # LPA
+    assert np.allclose(montage.dig[1]["r"][np.array([0, 2])], np.zeros(2))  # NZ
+    assert np.allclose(montage.dig[2]["r"][1:], np.zeros(2))  # RPA
