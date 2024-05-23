@@ -37,23 +37,17 @@ def export_krios_digitization(
     elc, fid = read_krios(fname=fname)
     ch_names = read_EGI_ch_names()
     assert elc.shape[0] == len(ch_names)  # sanity-check
-    # write electrodes
     fname = (
         bids_path_derivative.directory
         / f"{bids_path_derivative.basename}_elc_coords.xyz"
     )
     with open(fname, "w") as file:
-        file.write(f"{len(ch_names)}\t1\n")
+        file.write(f"{len(ch_names) + 3}\t1\n")
+        # write electrodes
         for coord, ch in zip(elc, ch_names, strict=True):
             file.write("\t".join([str(k) for k in coord]))
             file.write(f"\t{ch}\n")
-    # write fiducials
-    fname = (
-        bids_path_derivative.directory
-        / f"{bids_path_derivative.basename}_fid_coords.xyz"
-    )
-    with open(fname, "w") as file:
-        file.write("3\t1\n")
+        # write fiducials
         for coord, name in zip(fid, ["RPA", "LPA", "NZ"], strict=True):
             file.write("\t".join([str(k) for k in coord]))
             file.write(f"\t{name}\n")

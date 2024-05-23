@@ -28,14 +28,9 @@ def test_export_krios_digitization(tmp_path: Path, krios_file: Path):
     with open(fname) as fid:
         lines = fid.readlines()
     ch_names = read_EGI_ch_names()
-    assert int(lines[0].split("\t")[0]) == len(ch_names)
-    assert len(lines[1:]) == len(ch_names)
-    assert list(ch_names) == [elt.split("\t")[-1].rstrip("\n") for elt in lines[1:]]
-    fname = tmp_path / "derivatives" / "sub-01" / "eeg" / "sub-01_fid_coords.xyz"
-    assert fname.exists()
-    with open(fname) as fid:
-        lines = fid.readlines()
-    assert int(lines[0].split("\t")[0]) == 3
-    assert ["RPA", "LPA", "NZ"] == [
-        elt.split("\t")[-1].rstrip("\n") for elt in lines[1:]
-    ]
+    assert int(lines[0].split("\t")[0]) == len(ch_names) + 3
+    assert len(lines[1:]) == len(ch_names) + 3
+    assert list(ch_names) == [elt.split("\t")[-1].rstrip("\n") for elt in lines[1:-3]]
+    assert set(["RPA", "LPA", "NZ"]) == set(
+        [elt.split("\t")[-1].rstrip("\n") for elt in lines[-3:]]
+    )
