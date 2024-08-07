@@ -10,6 +10,7 @@ from mne_bids import BIDSPath, write_raw_bids
 from ..krios import read_EGI_ch_names, read_krios_montage
 from ..utils._checks import ensure_path, ensure_subject_int
 from ..utils._docs import fill_doc
+from ..utils.logs import logger
 from ._utils import (
     fetch_participant_information,
     find_events,
@@ -58,13 +59,19 @@ def write_eeg_datasets(
     if len(files) == 0:
         montage = None
     elif len(files) == 1:
-        montage = read_krios_montage(files[0])
-        shutil.copy2(files[0], bids_path_raw.fpath.with_suffix(".csv"))
+        try:
+            montage = read_krios_montage(files[0])
+        except Exception as error:
+            logger.exception(error)
+            montage = None
+        if montage is not None:
+            shutil.copy2(files[0], bids_path_raw.fpath.with_suffix(".csv"))
     else:
-        raise ValueError(
-            "Expected only one Krios digitization csv file, got "
-            f"{[file.name for file in files]}."
+        logger.error(
+            "Expected only one Krios digitization csv file, got %s",
+            [file.name for file in files],
         )
+        montage = None
     # look for existing participant information
     participant_info = fetch_participant_information(bids_path)
     # populate the BIDS dataset
@@ -72,7 +79,7 @@ def write_eeg_datasets(
         task = file.stem.split("_")[1].split("-")[1]
         bids_path.update(task=task)
         bids_path_raw.update(task=task)
-        raw = read_raw_egi(file)
+        raw = read_raw_egi(file, events_as_annotations=False)
         _process_EGI_raw(raw, montage)
         events, event_id = find_events(raw, task)
         with warnings.catch_warnings():
