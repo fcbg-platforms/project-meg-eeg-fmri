@@ -80,9 +80,9 @@ test = [
 project_hnp-sys_info = 'project_hnp.commands.sys_info:run'
 
 [project.urls]
-homepage = 'https://github.com/fcbg-hnp-meeg/project-meg-eeg-fmri'
-source = 'https://github.com/fcbg-hnp-meeg/project-meg-eeg-fmri'
-tracker = 'https://github.com/fcbg-hnp-meeg/project-meg-eeg-fmri/issues'
+homepage = 'https://github.com/fcbg-platforms/project-meg-eeg-fmri'
+source = 'https://github.com/fcbg-platforms/project-meg-eeg-fmri'
+tracker = 'https://github.com/fcbg-platforms/project-meg-eeg-fmri/issues'
 
 [tool.codespell]
 check-filenames = true
