@@ -49,8 +49,6 @@ version = '0.1.0'
 [project.optional-dependencies]
 all = [
   'project_hnp[build]',
-  'project_hnp[doc]',
-  'project_hnp[stubs]',
   'project_hnp[style]',
   'project_hnp[test]',
 ]
